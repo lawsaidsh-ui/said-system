@@ -1,6 +1,6 @@
 """link payment vouchers to clients and matters
 
-Revision ID: 0012_payment_voucher_client_matter
+Revision ID: 0012_pay_voucher
 Revises: 0011_whatsapp_manual_link
 Create Date: 2026-06-27
 """

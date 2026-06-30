@@ -1,7 +1,7 @@
 """add fixed monthly expenses
 
 Revision ID: 0013_fixed_monthly_expenses
-Revises: 0012_payment_voucher_client_matter
+Revises: 0012_pay_voucher
 Create Date: 2026-06-27
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 
 
 revision: str = "0013_fixed_monthly_expenses"
-down_revision: Union[str, None] = "0012_payment_voucher_client_matter"
+down_revision: Union[str, None] = "0012_pay_voucher"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
