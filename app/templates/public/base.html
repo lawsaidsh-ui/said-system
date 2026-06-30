@@ -20,6 +20,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/app.css">
+  <link rel="icon" href="/static/brand/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/static/brand/favicon.png">
   {% if schema_json is defined %}
   <script type="application/ld+json">{{ schema_json|safe }}</script>
   {% endif %}
@@ -28,7 +30,7 @@
   <header class="public-header">
     <div class="public-container header-inner">
       <a class="public-logo" href="/">
-        <span class="logo-mark">س</span>
+        <img class="logo-mark" src="/static/brand/logo-mark.png" alt="" aria-hidden="true">
         <span>
           <strong>{{ office_name }}</strong>
           <small>خدمات قانونية في {{ service_area }}</small>

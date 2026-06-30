@@ -1,9 +1,22 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>{{ invoice.invoice_number }}</title><link rel="stylesheet" href="/static/app.css"></head><body>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>{{ invoice.invoice_number }}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="icon" href="/static/brand/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/static/brand/favicon.png">
+</head>
+<body>
 <div class="no-print p-4"><button class="btn btn-primary" onclick="window.print()">طباعة</button> <a class="btn btn-secondary" href="/invoices/{{ invoice.id }}">عودة</a></div>
 <main class="print-page">
-  <h1 class="text-2xl font-extrabold text-[#0f2742]">{{ office_name }}</h1>
+  <div class="print-brand">
+    <img class="document-logo" src="/static/brand/logo.png" alt="Said Alshabibi Law Firm">
+  </div>
   <h2 class="text-xl mt-6 mb-4">فاتورة {{ invoice.invoice_number }}</h2>
   <div class="grid-3"><p><strong>العميل:</strong> {{ invoice.client.full_name }}</p><p><strong>تاريخ الإصدار:</strong> {{ invoice.issue_date }}</p><p><strong>تاريخ الاستحقاق:</strong> {{ invoice.due_date or '-' }}</p></div>
   <table class="mt-6"><tr><th>الوصف</th><th>القيمة</th></tr><tr><td>المجموع الفرعي</td><td>{{ invoice.subtotal }}</td></tr><tr><td>الخصم</td><td>{{ invoice.discount }}</td></tr><tr><td>الضريبة</td><td>{{ invoice.tax }}</td></tr><tr><td><strong>الإجمالي</strong></td><td><strong>{{ invoice.total_amount }}</strong></td></tr><tr><td>المدفوع</td><td>{{ invoice.paid_amount }}</td></tr></table>
   <p class="mt-8">{{ invoice.notes or invoice_footer }}</p>
-</main></body></html>
+</main>
+</body>
+</html>

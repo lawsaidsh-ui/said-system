@@ -29,7 +29,7 @@
 <section class="panel">
   <div class="table-wrap">
     <table>
-      <tr><th>الرقم</th><th>العميل</th><th>القضية</th><th>النوع</th><th>المستفيد</th><th>المبلغ</th><th>التاريخ</th><th>حالة التاريخ</th><th>الاعتماد</th><th>الحالة</th></tr>
+      <tr><th>الرقم</th><th>العميل</th><th>القضية</th><th>النوع</th><th>المستفيد</th><th>المبلغ</th><th>التاريخ</th><th>حالة التاريخ</th><th>الاعتماد</th><th>الحالة</th><th>الإجراء</th></tr>
       {% for v in vouchers %}
         <tr class="date-status-{{ v.date_status or 'confirmed' }}">
           <td>{{ v.voucher_number }}</td>
@@ -42,9 +42,10 @@
           <td><span class="badge {{ date_status_badge(v.date_status) }}">{{ date_status_options.get(v.date_status or 'confirmed', v.date_status or 'confirmed') }}</span>{% if v.date_note %}<small>{{ v.date_note }}</small>{% endif %}</td>
           <td>{% if v.approval_status == 'pending' and user.role == 'admin' %}<form method="post" action="/accounting/payment-vouchers/{{ v.id }}/approve"><button class="btn btn-primary" type="submit">اعتماد</button></form>{% else %}{{ v.approval_status }}{% endif %}</td>
           <td>{{ v.status }}</td>
+          <td><a class="btn btn-secondary" href="/accounting/payment-vouchers/{{ v.id }}/print">طباعة</a></td>
         </tr>
       {% else %}
-        <tr><td colspan="10">لا توجد سندات.</td></tr>
+        <tr><td colspan="11">لا توجد سندات.</td></tr>
       {% endfor %}
     </table>
   </div>

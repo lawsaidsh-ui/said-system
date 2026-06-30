@@ -1061,6 +1061,33 @@ def payment_vouchers_index(request: Request, db: Session = Depends(get_db), user
     return templates.TemplateResponse("accounting/payment_vouchers.html", {"request": request, "user": user, "vouchers": vouchers, "next_no": next_number(db, PaymentVoucher, "voucher_number", "PV"), "categories": EXPENSE_CATEGORIES, "methods": PAYMENT_METHODS_ACCOUNTING, "date_status_options": DATE_STATUS_OPTIONS, "date_status_badge": date_status_badge, **get_form_context(db)})
 
 
+@router.get("/payment-vouchers/{voucher_id}/print")
+def payment_voucher_print(request: Request, voucher_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_finance(user)
+    voucher = db.scalar(
+        select(PaymentVoucher)
+        .where(PaymentVoucher.id == voucher_id)
+        .options(
+            selectinload(PaymentVoucher.client),
+            selectinload(PaymentVoucher.matter),
+            selectinload(PaymentVoucher.created_by),
+            selectinload(PaymentVoucher.approved_by),
+        )
+    )
+    if not voucher:
+        raise HTTPException(status_code=404, detail="سند الصرف غير موجود.")
+    return templates.TemplateResponse(
+        "accounting/payment_voucher_print.html",
+        {
+            "request": request,
+            "user": user,
+            "voucher": voucher,
+            "methods": PAYMENT_METHODS_ACCOUNTING,
+            "date_status_options": DATE_STATUS_OPTIONS,
+        },
+    )
+
+
 @router.post("/payment-vouchers")
 async def payment_voucher_create(request: Request, expense_type: str = Form(...), beneficiary: str = Form(...), client_id: str = Form(""), matter_id: str = Form(""), amount: str = Form(...), payment_method: str = Form("cash"), paid_at: str = Form(""), date_status: str = Form("confirmed"), date_note: str = Form(""), notes: str = Form(""), attachment: UploadFile | None = File(None), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     require_finance(user)
