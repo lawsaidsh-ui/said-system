@@ -12,8 +12,8 @@ services:
         generateValue: true
       - key: DATABASE_URL
         fromDatabase:
-          name: saeed-law-db
+          name: said-system-db
           property: connectionString
 databases:
-  - name: saeed-law-db
+  - name: said-system-db
     plan: starter
