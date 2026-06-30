@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}لوحة المحامي{% endblock %}
+{% block content %}
+<div class="role-dashboard">
+<h2 class="page-title">لوحة المحامي</h2>
+<div class="stats-grid">
+  <div class="stat-card"><span>قضاياي المفتوحة</span><strong>{{ stats.assigned_matters }}</strong></div>
+  <div class="stat-card"><span>جلساتي هذا الأسبوع</span><strong>{{ stats.week_sessions }}</strong></div>
+  <div class="stat-card"><span>مهامي المعلقة</span><strong>{{ stats.pending_tasks }}</strong></div>
+  <div class="stat-card"><span>مهام عاجلة</span><strong>{{ stats.urgent_tasks }}</strong></div>
+</div>
+<div class="grid-2">
+  <section class="panel"><h3 class="section-title">قضاياي</h3>{% set matters = my_matters %}{% include "partials/matter_table.html" with context %}</section>
+  <section class="panel"><h3 class="section-title">جلساتي القادمة</h3>{% set sessions = my_sessions %}{% include "partials/session_table.html" with context %}</section>
+  <section class="panel"><h3 class="section-title">مهامي المفتوحة</h3>{% set tasks = my_tasks %}{% include "partials/task_table.html" with context %}</section>
+</div>
+</div>
+{% endblock %}

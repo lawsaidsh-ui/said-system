@@ -1,0 +1,38 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ matter.case_number }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="page-title mb-0">{{ matter.case_number }} · {{ matter.title }}</h2>
+  <div class="actions">
+    <button class="btn btn-secondary" type="button" data-whatsapp-source-type="matter" data-whatsapp-source-id="{{ matter.id }}">إرسال واتساب</button>
+    <a class="btn btn-primary" href="/tasks/new?matter_id={{ matter.id }}&client_id={{ matter.client_id }}">إنشاء مهمة متابعة</a>
+    <a class="btn btn-secondary" href="/matters/{{ matter.id }}/edit">تعديل</a>
+  </div>
+</div>
+<section class="panel grid-3">
+  <p><strong>رقم المكتب:</strong> {{ matter.case_number }}</p><p><strong>رقم الدعوى بالمحكمة:</strong> {{ matter.ministry_case_number or 'لم يصدر بعد' }}</p><p><strong>العميل:</strong> {{ matter.client.full_name if matter.client else '-' }}</p>
+  <p><strong>المحامي:</strong> {{ matter.assigned_lawyer.full_name if matter.assigned_lawyer else '-' }}</p><p><strong>المحكمة:</strong> {{ matter.court_name or '-' }}</p>
+  <p><strong>الحالة:</strong> <span class="badge {{ badge_class(matter.status) }}">{{ case_statuses.get(matter.status, matter.status) }}</span></p><p><strong>الأولوية:</strong> <span class="badge {{ badge_class(matter.priority) }}">{{ priorities.get(matter.priority, matter.priority) }}</span></p><p><strong>المطالبة:</strong> {{ matter.claim_amount or '-' }}</p>
+  <p><strong>آخر موعد لصحيفة الاستئناف:</strong> {{ matter.appeal_deadline or '-' }}</p><p><strong>آخر موعد لصحيفة الطعن:</strong> {{ matter.cassation_deadline or '-' }}</p>
+  <p class="full"><strong>ملاحظات قانونية:</strong> {{ matter.description or '-' }}</p>
+</section>
+<div class="tabs" data-tabs>
+  <button class="tab active" type="button" data-tab-target="sessions">الجلسات</button>
+  <button class="tab" type="button" data-tab-target="tasks">المهام</button>
+  <button class="tab" type="button" data-tab-target="documents">المستندات</button>
+  <button class="tab" type="button" data-tab-target="invoices">الفواتير</button>
+</div>
+<section class="panel" data-tab-panel="sessions"><h3 class="section-title">الجلسات</h3>{% set sessions = matter.sessions %}{% include "partials/session_table.html" %}</section>
+<section class="panel hidden" data-tab-panel="tasks"><h3 class="section-title">المهام</h3>{% set tasks = matter.tasks %}{% include "partials/task_table.html" %}</section>
+<section class="panel hidden" data-tab-panel="documents"><h3 class="section-title">المستندات</h3><div class="table-wrap"><table><tr><th>العنوان</th><th>النوع</th><th>رفعه</th><th>الملف</th></tr>{% for doc in matter.documents %}<tr><td>{{ doc.title }}</td><td>{{ doc.document_type or '-' }}</td><td>{{ doc.uploaded_by.full_name if doc.uploaded_by else '-' }}</td><td><a class="btn btn-secondary" href="{{ doc.file_url }}">فتح</a></td></tr>{% else %}<tr><td colspan="4">لا توجد مستندات.</td></tr>{% endfor %}</table></div></section>
+<section class="panel hidden" data-tab-panel="invoices"><h3 class="section-title">الفواتير</h3><div class="table-wrap"><table><tr><th>الفاتورة</th><th>الإجمالي</th><th>الحالة</th></tr>{% for invoice in matter.invoices %}<tr><td><a href="/invoices/{{ invoice.id }}">{{ invoice.invoice_number }}</a></td><td>{{ invoice.total_amount }}</td><td><span class="badge {{ badge_class(invoice.status) }}">{{ invoice_statuses.get(invoice.status, invoice.status) }}</span></td></tr>{% else %}<tr><td colspan="3">لا توجد فواتير.</td></tr>{% endfor %}</table></div></section>
+{% if user.role == "admin" %}
+  <section class="panel">
+    <div class="section-head">
+      <h3 class="section-title">سجل نشاط القضية</h3>
+      <a class="text-link" href="/audit">عرض سجل التدقيق الكامل</a>
+    </div>
+    {% include "partials/audit_table.html" %}
+  </section>
+{% endif %}
+{% endblock %}

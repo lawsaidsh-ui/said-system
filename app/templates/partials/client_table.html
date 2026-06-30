@@ -1,0 +1,5 @@
+<div class="table-wrap"><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>النوع</th><th></th></tr></thead><tbody>
+{% for client in clients or recent_clients %}
+<tr><td data-label="الاسم">{{ client.full_name }}</td><td data-label="الهاتف">{{ client.phone or '-' }}</td><td data-label="النوع">{{ client_types.get(client.client_type, client.client_type) }}</td><td data-label="الإجراء"><a class="btn btn-secondary" href="/clients/{{ client.id }}">عرض</a></td></tr>
+{% else %}<tr><td colspan="4">لا توجد بيانات.</td></tr>{% endfor %}
+</tbody></table></div>

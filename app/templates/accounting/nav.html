@@ -1,0 +1,31 @@
+{% set current_path = request.url.path %}
+<nav class="accounting-nav" aria-label="التنقل المحاسبي">
+  <div class="accounting-nav-group">
+    <span class="accounting-nav-label">المركز المالي</span>
+    <a class="accounting-nav-link {% if current_path == '/accounting' %}active{% endif %}" href="/accounting">لوحة IFRS</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/reports') %}active{% endif %}" href="/accounting/reports">التقارير</a>
+    {% if user.role == "admin" %}
+      <a class="accounting-nav-link {% if current_path.startswith('/owner-financial') %}active{% endif %}" href="/owner-financial">تقرير المالك</a>
+    {% endif %}
+  </div>
+  <div class="accounting-nav-group">
+    <span class="accounting-nav-label">العمليات</span>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/clients') %}active{% endif %}" href="/accounting/clients">العملاء مالياً</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/missing-case-fees') %}active{% endif %}" href="/accounting/missing-case-fees">قضايا بلا أتعاب</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/case-fees') %}active{% endif %}" href="/accounting/case-fees">أتعاب القضايا</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/receipts') %}active{% endif %}" href="/accounting/receipts">سندات القبض</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/payments') %}active{% endif %}" href="/payments">المدفوعات</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/payment-vouchers') %}active{% endif %}" href="/accounting/payment-vouchers">سندات الصرف</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/expenses') %}active{% endif %}" href="/accounting/expenses">المصروفات</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/installments') %}active{% endif %}" href="/accounting/installments">الأقساط</a>
+  </div>
+  <div class="accounting-nav-group">
+    <span class="accounting-nav-label">الرقابة والدفاتر</span>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/overdue-clients') %}active{% endif %}" href="/accounting/overdue-clients">التعثر والتحصيل</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/fixed-expenses') %}active{% endif %}" href="/accounting/fixed-expenses">التكاليف الثابتة</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/accounts') %}active{% endif %}" href="/accounting/accounts">الحسابات</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/historical-date-review') %}active{% endif %}" href="/accounting/historical-date-review">مراجعة البيانات القديمة</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/journal') %}active{% endif %}" href="/accounting/journal">القيود اليومية</a>
+    <a class="accounting-nav-link {% if current_path.startswith('/accounting/chart') %}active{% endif %}" href="/accounting/chart">دليل الحسابات</a>
+  </div>
+</nav>

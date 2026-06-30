@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}القضايا{% endblock %}
+{% block content %}
+<div class="matters-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">القضايا</h2>
+    <a class="btn btn-primary" href="/matters/new">قضية جديدة</a>
+  </div>
+
+  <section class="panel matters-filter-panel">
+    <form class="filters" method="get">
+      <div class="field"><label>بحث</label><input class="input" name="q" value="{{ filters.q }}" placeholder="رقم المكتب أو رقم الدعوى بالمحكمة أو العميل"></div>
+      <div class="field"><label>الحالة</label><select name="status"><option value="">الكل</option>{% for key,val in case_statuses.items() %}<option value="{{ key }}" {% if filters.status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+      <div class="field"><label>المحامي</label><select name="lawyer_id"><option value="">الكل</option>{% for lawyer in lawyers %}<option value="{{ lawyer.id }}" {% if filters.lawyer_id|string==lawyer.id|string %}selected{% endif %}>{{ lawyer.full_name }}</option>{% endfor %}</select></div>
+      <div class="field"><label>المحكمة</label><input class="input" name="court" value="{{ filters.court }}"></div>
+      <div class="field"><label>نوع القضية</label><input class="input" name="case_type" value="{{ filters.case_type }}"></div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+    </form>
+  </section>
+
+  <section class="panel matters-list-panel">{% include "partials/matter_table.html" %}</section>
+</div>
+{% endblock %}

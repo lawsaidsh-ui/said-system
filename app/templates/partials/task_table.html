@@ -1,0 +1,29 @@
+<div class="table-wrap"><table><thead><tr><th>المهمة</th><th>النوع</th><th>المسؤول</th><th>الارتباط</th><th>الاستحقاق</th><th>الأولوية</th><th>الحالة</th><th></th></tr></thead><tbody>
+{% for task in tasks %}
+<tr>
+  <td data-label="المهمة">
+    <strong>{{ task.title }}</strong>
+    {% if task.description %}<br><span class="muted">{{ task.description }}</span>{% endif %}
+  </td>
+  <td data-label="النوع">{{ task_types.get(task.task_type, task.task_type) }}</td>
+  <td data-label="المسؤول">{{ task.assigned_to.full_name if task.assigned_to else role_labels.get(task.assigned_role, task.assigned_role or '-') }}</td>
+  <td data-label="الارتباط">
+    {% if task.matter %}<a class="text-link" href="/matters/{{ task.matter.id }}">{{ task.matter.case_number }}</a>{% endif %}
+    {% if task.client %}<br><span class="muted">{{ task.client.full_name }}</span>{% endif %}
+    {% if task.invoice %}<br><a class="text-link" href="/invoices/{{ task.invoice.id }}">{{ task.invoice.invoice_number }}</a>{% endif %}
+    {% if not task.matter and not task.client and not task.invoice %}-{% endif %}
+  </td>
+  <td data-label="الاستحقاق">{{ task.due_date or '-' }}</td>
+  <td data-label="الأولوية"><span class="badge {{ badge_class(task.priority) }}">{{ priorities.get(task.priority, task.priority) }}</span></td>
+  <td data-label="الحالة"><span class="badge {{ badge_class(task.status) }}">{{ task_statuses.get(task.status, task.status) }}</span></td>
+  <td class="actions" data-label="الإجراء">
+    {% if user.role in ['admin','lawyer','secretary','accountant','data_entry'] %}
+      <a class="btn btn-secondary" href="/tasks/{{ task.id }}/edit">تعديل</a>
+      {% if task.status != 'completed' %}
+        <form method="post" action="/tasks/{{ task.id }}/complete"><button class="btn btn-primary" type="submit">إكمال</button></form>
+      {% endif %}
+    {% endif %}
+  </td>
+</tr>
+{% else %}<tr><td colspan="8">لا توجد بيانات.</td></tr>{% endfor %}
+</tbody></table></div>

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}الإعدادات{% endblock %}
+{% block content %}
+<h2 class="page-title">الإعدادات</h2>
+<form class="panel form-grid" method="post">
+  {% for key, title in keys %}
+    {% set item = settings_map.get(key) %}
+    <div class="field {% if key in ['address','invoice_footer','notifications'] %}full{% endif %}">
+      <label>{{ title }}</label>
+      {% if key in ['address','invoice_footer','notifications'] %}
+        <textarea name="{{ key }}">{{ item.value if item else '' }}</textarea>
+      {% else %}
+        <input class="input" name="{{ key }}" value="{{ item.value if item else '' }}">
+      {% endif %}
+    </div>
+  {% endfor %}
+  <div class="full" id="task-rules">
+    <h3 class="section-title">قواعد المهام الروتينية والمتابعة التلقائية</h3>
+    <p class="muted mb-3">هذه القواعد تحدد متى ينشئ النظام مهام التحصيل والجلسات والمتابعة الدورية، ومن هو الموظف المسؤول افتراضياً.</p>
+  </div>
+  {% for key, title, kind in task_rule_keys %}
+    {% set item = settings_map.get(key) %}
+    {% set value = item.value if item else task_setting_defaults.get(key, '') %}
+    <div class="field">
+      <label>{{ title }}</label>
+      {% if kind == 'bool' %}
+        <select name="{{ key }}">
+          <option value="1" {% if value in ['1','true','on','نعم'] %}selected{% endif %}>نعم</option>
+          <option value="0" {% if value in ['0','false','off','لا'] %}selected{% endif %}>لا</option>
+        </select>
+      {% elif kind == 'user' %}
+        <select name="{{ key }}">
+          <option value="">حسب أول مستخدم مناسب للدور</option>
+          {% for employee in users %}
+            <option value="{{ employee.id }}" {% if value|string == employee.id|string %}selected{% endif %}>{{ employee.full_name }} · {{ role_labels.get(employee.role, employee.role) }}</option>
+          {% endfor %}
+        </select>
+      {% else %}
+        <input class="input" type="{{ kind }}" name="{{ key }}" value="{{ value }}">
+      {% endif %}
+    </div>
+  {% endfor %}
+  <div class="actions full"><button class="btn btn-primary" data-confirm="تأكيد تحديث الإعدادات؟" type="submit">حفظ الإعدادات</button></div>
+</form>
+{% endblock %}

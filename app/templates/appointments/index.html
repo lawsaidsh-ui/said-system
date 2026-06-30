@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}حجوزات العملاء{% endblock %}
+{% block content %}
+<div class="appointments-page">
+  <section class="appointments-hero">
+    <div>
+      <p class="owner-eyebrow">المواعيد والاستشارات</p>
+      <h2 class="page-title">حجوزات العملاء</h2>
+      <p class="hero-copy">راجع طلبات الحجز الواردة من الموقع، تأكد من بيانات العميل، ثم حدّث حالة الموعد من نفس البطاقة.</p>
+    </div>
+    <form class="filters appointments-filter-form" method="get">
+      <div class="field">
+        <label>الحالة</label>
+        <select name="status">
+          <option value="">كل الحالات</option>
+          <option value="pending" {% if status == 'pending' %}selected{% endif %}>بانتظار التأكيد</option>
+          <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>مؤكد</option>
+          <option value="completed" {% if status == 'completed' %}selected{% endif %}>مكتمل</option>
+          <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>ملغي</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+    </form>
+  </section>
+
+  <section class="appointment-stats" aria-label="ملخص الحجوزات">
+    <a class="appointment-stat {% if not status %}active{% endif %}" href="/appointments">
+      <span>كل الحجوزات</span>
+      <strong>{{ appointment_counts.all }}</strong>
+    </a>
+    <a class="appointment-stat {% if status == 'pending' %}active{% endif %}" href="/appointments?status=pending">
+      <span>بانتظار التأكيد</span>
+      <strong>{{ appointment_counts.pending }}</strong>
+    </a>
+    <a class="appointment-stat {% if status == 'confirmed' %}active{% endif %}" href="/appointments?status=confirmed">
+      <span>مؤكد</span>
+      <strong>{{ appointment_counts.confirmed }}</strong>
+    </a>
+    <a class="appointment-stat {% if status == 'completed' %}active{% endif %}" href="/appointments?status=completed">
+      <span>مكتمل</span>
+      <strong>{{ appointment_counts.completed }}</strong>
+    </a>
+  </section>
+
+  <section class="appointments-list-panel">
+    <div class="appointments-board">
+      {% for appointment in appointments %}
+      <article class="appointment-card">
+        <div class="appointment-card-head">
+          <div>
+            <span class="appointment-label">الموعد</span>
+            <strong class="appointment-date">{{ appointment.appointment_date }}</strong>
+            <span class="appointment-time">{{ appointment.appointment_time | time12 }}</span>
+          </div>
+          <span class="badge {{ 'badge-green' if appointment.status in ['confirmed','completed'] else ('badge-red' if appointment.status == 'cancelled' else 'badge-yellow') }}">
+            {% if appointment.status == 'pending' %}بانتظار التأكيد{% elif appointment.status == 'confirmed' %}مؤكد{% elif appointment.status == 'completed' %}مكتمل{% elif appointment.status == 'cancelled' %}ملغي{% else %}{{ appointment.status }}{% endif %}
+          </span>
+        </div>
+
+        <div class="appointment-card-body">
+          <div class="appointment-person">
+            <span class="appointment-label">العميل</span>
+            <strong>{{ appointment.client_name }}</strong>
+            <a class="appointment-phone" href="tel:{{ appointment.phone }}">{{ appointment.phone }}</a>
+            {% if appointment.email %}
+            <span class="muted">{{ appointment.email }}</span>
+            {% endif %}
+          </div>
+          <div>
+            <span class="appointment-label">نوع الطلب</span>
+            <strong>{{ appointment.case_type or 'طلب استشارة' }}</strong>
+            <span class="muted">{{ appointment.litigation_degree or '-' }}</span>
+          </div>
+        </div>
+
+        <div class="appointment-summary">
+          <span class="appointment-label">الملخص</span>
+          <p class="appointment-topic">{{ appointment.topic or 'طلب استشارة من الموقع' }}</p>
+          {% if appointment.message %}
+          <p class="appointment-message">{{ appointment.message }}</p>
+          {% endif %}
+        </div>
+
+        {% if user.role in ['admin', 'lawyer', 'secretary', 'data_entry'] %}
+        <div class="appointment-card-actions">
+          <form method="post" action="/appointments/{{ appointment.id }}/status" class="appointment-status-form">
+            <select name="status" aria-label="تغيير حالة الموعد">
+              <option value="pending" {% if appointment.status == 'pending' %}selected{% endif %}>بانتظار التأكيد</option>
+              <option value="confirmed" {% if appointment.status == 'confirmed' %}selected{% endif %}>مؤكد</option>
+              <option value="completed" {% if appointment.status == 'completed' %}selected{% endif %}>مكتمل</option>
+              <option value="cancelled" {% if appointment.status == 'cancelled' %}selected{% endif %}>ملغي</option>
+            </select>
+            <button class="btn btn-secondary" type="submit">حفظ</button>
+          </form>
+          {% if appointment.status == 'confirmed' %}
+          <button
+            class="btn btn-primary appointment-whatsapp-btn"
+            type="button"
+            data-whatsapp-source-type="appointment"
+            data-whatsapp-source-id="{{ appointment.id }}"
+          >
+            إرسال تأكيد واتساب
+          </button>
+          {% endif %}
+        </div>
+        {% endif %}
+      </article>
+      {% else %}
+      <div class="empty-state">لا توجد حجوزات مطابقة للفلتر الحالي.</div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

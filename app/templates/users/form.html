@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل مستخدم' if item else 'مستخدم جديد' }}{% endblock %}
+{% block content %}
+<h2 class="page-title">{{ 'تعديل مستخدم' if item else 'مستخدم جديد' }}</h2>
+<form class="panel form-grid" method="post">
+  <div class="field"><label>الاسم الكامل</label><input class="input" name="full_name" required value="{{ item.full_name if item else '' }}"></div>
+  <div class="field"><label>البريد</label><input class="input" type="email" name="email" required value="{{ item.email if item else '' }}"></div>
+  <div class="field"><label>الهاتف</label><input class="input" name="phone" value="{{ item.phone if item else '' }}"></div>
+  <div class="field"><label>كلمة المرور</label><input class="input" type="password" name="password" {% if not item %}required{% endif %}></div>
+  <div class="field"><label>الدور</label><select name="role">{% for key,val in role_labels.items() %}<option value="{{ key }}" {% if item and item.role==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+  <label class="field flex items-center gap-2 mt-7"><input type="checkbox" name="is_active" value="1" {% if not item or item.is_active %}checked{% endif %}> حساب نشط</label>
+  <div class="actions full"><button class="btn btn-primary" data-confirm="تأكيد حفظ المستخدم؟" type="submit">حفظ</button><a class="btn btn-secondary" href="/users">إلغاء</a></div>
+</form>
+{% endblock %}

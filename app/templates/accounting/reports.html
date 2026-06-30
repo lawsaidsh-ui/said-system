@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+{% set quality = date_quality if date_quality is defined else (summary.date_quality if summary.date_quality is defined else none) %}
+<h2 class="page-title">التقارير المالية</h2>
+{% include "accounting/nav.html" %}
+<section class="panel">
+  <form class="filters" method="get">
+    <div class="field"><label>من تاريخ</label><input class="input" type="date" name="start_date" value="{{ start_date }}"></div>
+    <div class="field"><label>إلى تاريخ</label><input class="input" type="date" name="end_date" value="{{ end_date }}"></div>
+    <button class="btn btn-primary" type="submit">عرض التقرير</button>
+    <a class="btn btn-secondary" href="/accounting/reports/export.xls?start_date={{ start_date }}&end_date={{ end_date }}">تصدير Excel</a>
+    <button class="btn btn-secondary" onclick="window.print()" type="button">طباعة PDF</button>
+  </form>
+</section>
+
+{% if quality and quality.has_uncertain %}
+  <section class="panel finance-date-warning">
+    <strong>تنبيه دقة البيانات المالية</strong>
+    <p>يوجد في نطاق التقرير مبالغ ذات تواريخ تقديرية أو غير مؤكدة. راجع تفاصيلها في صفحة مراجعة البيانات المالية القديمة قبل الاعتماد النهائي على التقرير التاريخي.</p>
+  </section>
+{% endif %}
+
+<div class="stats-grid">
+  <div class="stat-card"><span>إجمالي الفواتير</span><strong>{{ summary.billed }}</strong></div>
+  <div class="stat-card"><span>الإيرادات</span><strong>{{ summary.revenue }}</strong></div>
+  <div class="stat-card"><span>المصروفات</span><strong>{{ summary.expenses }}</strong></div>
+  <div class="stat-card"><span>صافي الربح</span><strong>{{ summary.net_profit }}</strong></div>
+  <div class="stat-card"><span>المستحقات</span><strong>{{ summary.outstanding }}</strong></div>
+  <div class="stat-card"><span>فواتير متأخرة</span><strong>{{ summary.overdue_invoices }}</strong></div>
+</div>
+
+{% if quality %}
+  <section class="panel">
+    <h3 class="section-title">جودة تواريخ البيانات</h3>
+    <div class="table-wrap">
+      <table>
+        <tr><th>الحالة</th><th>عدد السجلات</th><th>الإيرادات</th><th>المصروفات</th><th>الصافي</th></tr>
+        {% for key, row in quality.statuses.items() %}
+          <tr class="date-status-{{ key }}">
+            <td><span class="badge {{ row.badge }}">{{ row.label }}</span></td>
+            <td>{{ row.count }}</td>
+            <td>{{ row.revenue }}</td>
+            <td>{{ row.expenses }}</td>
+            <td>{{ row.net }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+{% else %}
+  <section class="panel finance-date-warning">
+    أعد تشغيل الخادم لتفعيل آخر تحديثات جودة تواريخ التقارير.
+  </section>
+{% endif %}
+
+<section class="panel fixed-expense-report-panel">
+  <div class="section-head">
+    <div>
+      <h3 class="section-title">مؤشرات المصاريف الشهرية الثابتة</h3>
+      <p class="muted">الحسابات أدناه مبنية على الشهر الحالي والمصاريف الثابتة النشطة، مع ضرورة مراعاة جودة تواريخ التحصيل والصرف أعلاه.</p>
+    </div>
+    <a class="btn btn-secondary" href="/accounting/fixed-expenses">عرض المصاريف الثابتة</a>
+  </div>
+  <div class="stats-grid fixed-expense-stats compact-stats">
+    <div class="stat-card revenue-stat"><span>إجمالي الإيرادات الشهرية</span><strong>{{ fixed_expense_summary.monthly_revenue }}</strong></div>
+    <div class="stat-card expense-stat"><span>إجمالي المصاريف الشهرية الثابتة</span><strong>{{ fixed_expense_summary.monthly_total }}</strong></div>
+    <div class="stat-card"><span>صافي الربح التقريبي</span><strong>{{ fixed_expense_summary.estimated_net_profit }}</strong><small>يتأثر بأي بيانات تقديرية في الفترة.</small></div>
+    <div class="stat-card expense-stat"><span>نقطة التعادل الشهرية</span><strong>{{ fixed_expense_summary.break_even_monthly }}</strong><small>تعرض كمؤشر وليس كرقم نهائي عند وجود بيانات غير مؤكدة.</small></div>
+    <div class="stat-card"><span>الاحتياج اليومي للتغطية</span><strong>{{ fixed_expense_summary.daily_needed }}</strong></div>
+  </div>
+</section>
+
+<section class="panel report-footnote">
+  توجد بيانات مالية قديمة بتواريخ تقديرية أو غير مؤكدة، لذلك قد تختلف دقة التقارير التاريخية.
+</section>
+{% endblock %}

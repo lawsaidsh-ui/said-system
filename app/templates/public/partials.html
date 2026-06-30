@@ -1,0 +1,28 @@
+{% macro cta(title="هل تحتاج إلى استشارة قانونية؟", text="تواصل مع مكتب سعيد الشبيبي للمحاماة لعرض موضوعك بسرية وفهم الخيارات القانونية المتاحة في سلطنة عمان.") %}
+<section class="public-cta">
+  <div>
+    <h2>{{ title }}</h2>
+    <p>{{ text }}</p>
+  </div>
+  <div class="cta-actions">
+    <a class="public-btn primary" href="{{ whatsapp_url }}">تحدث معنا بسرية</a>
+    <a class="public-btn secondary" href="/book-appointment">احجز استشارة</a>
+  </div>
+</section>
+{% endmacro %}
+
+{% macro service_card(service) %}
+<article class="public-card">
+  <h3><a href="/services/{{ service.slug }}">{{ service.title }}</a></h3>
+  <p>{{ service.summary }}</p>
+  <a class="text-link" href="/services/{{ service.slug }}">اقرأ عن الخدمة</a>
+</article>
+{% endmacro %}
+
+{% macro article_card(article) %}
+<article class="public-card">
+  <h3><a href="/blog/{{ article.slug }}">{{ article.title }}</a></h3>
+  <p>{{ article.direct_answer }}</p>
+  <a class="text-link" href="/blog/{{ article.slug }}">قراءة المقال</a>
+</article>
+{% endmacro %}

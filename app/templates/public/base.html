@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meta_title }}</title>
+  <meta name="description" content="{{ meta_description }}">
+  <meta name="keywords" content="{{ meta_keywords }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:locale" content="ar_OM">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ meta_title }}">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:site_name" content="{{ office_name }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta_title }}">
+  <meta name="twitter:description" content="{{ meta_description }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+  {% if schema_json is defined %}
+  <script type="application/ld+json">{{ schema_json|safe }}</script>
+  {% endif %}
+</head>
+<body class="public-body">
+  <header class="public-header">
+    <div class="public-container header-inner">
+      <a class="public-logo" href="/">
+        <span class="logo-mark">س</span>
+        <span>
+          <strong>{{ office_name }}</strong>
+          <small>خدمات قانونية في {{ service_area }}</small>
+        </span>
+      </a>
+      <nav class="public-nav" aria-label="التنقل الرئيسي">
+        <a href="/about">من نحن</a>
+        <a href="/services">الخدمات</a>
+        <a href="/#before-worry">قبل أن تقلق</a>
+        <a href="/blog">المدونة</a>
+        <a href="/faq">الأسئلة الشائعة</a>
+        <a href="/book-appointment">حجز موعد</a>
+        <a href="/contact">تواصل معنا</a>
+      </nav>
+      <div class="header-actions">
+        <a class="public-btn secondary" href="tel:{{ phone_tel }}">اتصال</a>
+        <a class="public-btn primary" href="{{ whatsapp_url }}">تحدث بسرية</a>
+      </div>
+    </div>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="public-footer">
+    <div class="public-container footer-grid">
+      <section>
+        <h2>{{ office_name }}</h2>
+        <p>موقع رسمي للتعريف بالخدمات القانونية في {{ service_area }}. نسمع قصتك بهدوء، ندرس موقفك القانوني بعناية، ونوضح الخيارات المتاحة بسرية ومهنية.</p>
+      </section>
+      <section>
+        <h3>روابط مهمة</h3>
+        <a href="/services">الخدمات القانونية</a>
+        <a href="/blog">المدونة القانونية</a>
+        <a href="/book-appointment">حجز موعد</a>
+        <a href="/privacy-policy">سياسة الخصوصية</a>
+        <a href="/legal-disclaimer">إخلاء المسؤولية القانونية</a>
+      </section>
+      <section>
+        <h3>تواصل مباشر</h3>
+        <a href="tel:{{ phone_tel }}">{{ phone_display }}</a>
+        <a href="{{ whatsapp_url }}">واتساب</a>
+        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+      </section>
+    </div>
+    <div class="public-container footer-bottom">
+      <span>© {{ office_name }}</span>
+      <span>المعلومات المنشورة عامة ولا تغني عن الاستشارة القانونية.</span>
+    </div>
+  </footer>
+  <a class="floating-whatsapp" href="{{ whatsapp_url }}" aria-label="تحدث معنا بسرية عبر واتساب">
+    تحدث معنا بسرية
+  </a>
+</body>
+</html>

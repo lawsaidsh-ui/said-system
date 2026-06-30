@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ client.full_name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h2 class="page-title mb-0">{{ client.full_name }}</h2>
+  <div class="actions">
+    <button class="btn btn-secondary" type="button" data-whatsapp-source-type="client" data-whatsapp-source-id="{{ client.id }}">إرسال واتساب</button>
+    <a class="btn btn-primary" href="/clients/{{ client.id }}/edit">تعديل</a>
+  </div>
+</div>
+<section class="panel">
+  <div class="grid-3">
+    <p><strong>الهاتف:</strong> {{ client.phone or '-' }}</p><p><strong>البريد:</strong> {{ client.email or '-' }}</p><p><strong>الرقم المدني:</strong> {{ client.civil_id or '-' }}</p>
+    <p><strong>النوع:</strong> {{ client_types.get(client.client_type, client.client_type) }}</p><p><strong>الشركة:</strong> {{ client.company_name or '-' }}</p><p><strong>السجل:</strong> {{ client.commercial_registration or '-' }}</p>
+  </div>
+  <p class="mt-3"><strong>العنوان:</strong> {{ client.address or '-' }}</p>
+  <p class="mt-2"><strong>الملاحظات:</strong> {{ client.notes or '-' }}</p>
+</section>
+<div class="tabs" data-tabs>
+  <button class="tab active" type="button" data-tab-target="matters">القضايا</button>
+  <button class="tab" type="button" data-tab-target="documents">المستندات</button>
+  <button class="tab" type="button" data-tab-target="invoices">الفواتير</button>
+  <button class="tab" type="button" data-tab-target="consultations">الاستشارات</button>
+</div>
+<section class="panel" data-tab-panel="matters"><h3 class="section-title">القضايا المرتبطة</h3>{% set matters = client.matters %}{% include "partials/matter_table.html" %}</section>
+<section class="panel hidden" data-tab-panel="documents"><h3 class="section-title">المستندات</h3><div class="table-wrap"><table><tr><th>العنوان</th><th>النوع</th><th>رفعه</th><th>الملف</th></tr>{% for doc in client.documents %}<tr><td>{{ doc.title }}</td><td>{{ doc.document_type or '-' }}</td><td>{{ doc.uploaded_by.full_name if doc.uploaded_by else '-' }}</td><td><a class="btn btn-secondary" href="{{ doc.file_url }}">فتح</a></td></tr>{% else %}<tr><td colspan="4">لا توجد مستندات.</td></tr>{% endfor %}</table></div></section>
+<section class="panel hidden" data-tab-panel="invoices"><h3 class="section-title">الفواتير والمدفوعات</h3><div class="table-wrap"><table><tr><th>الفاتورة</th><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th></tr>{% for invoice in client.invoices %}<tr><td><a href="/invoices/{{ invoice.id }}">{{ invoice.invoice_number }}</a></td><td>{{ invoice.total_amount }}</td><td>{{ invoice.paid_amount }}</td><td><span class="badge {{ badge_class(invoice.status) }}">{{ invoice_statuses.get(invoice.status, invoice.status) }}</span></td></tr>{% else %}<tr><td colspan="4">لا توجد فواتير.</td></tr>{% endfor %}</table></div></section>
+<section class="panel hidden" data-tab-panel="consultations"><h3 class="section-title">الاستشارات</h3><div class="table-wrap"><table><tr><th>الموضوع</th><th>طالب الاستشارة</th><th>الهاتف</th><th>الحالة</th><th></th></tr>{% for item in client.consultations %}<tr><td>{{ item.subject }}</td><td>{{ item.requester_name }}</td><td>{{ item.requester_phone }}</td><td><span class="badge {{ badge_class(item.status) }}">{{ consultation_statuses.get(item.status, item.status) }}</span></td><td><a class="btn btn-secondary" href="/consultations/{{ item.id }}">عرض</a></td></tr>{% else %}<tr><td colspan="5">لا توجد استشارات.</td></tr>{% endfor %}</table></div></section>
+{% if user.role == "admin" %}
+  <section class="panel">
+    <div class="section-head">
+      <h3 class="section-title">سجل نشاط العميل</h3>
+      <a class="text-link" href="/audit">عرض سجل التدقيق الكامل</a>
+    </div>
+    {% include "partials/audit_table.html" %}
+  </section>
+{% endif %}
+{% endblock %}

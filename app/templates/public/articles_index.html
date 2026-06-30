@@ -1,0 +1,19 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta, article_card with context %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">المدونة القانونية</p>
+    <h1>مقالات قانونية مبسطة للعملاء</h1>
+    <p>محتوى عام ومحسن للبحث يساعد العملاء في سلطنة عمان على فهم موضوعات قانونية شائعة قبل طلب الاستشارة المتخصصة.</p>
+  </div>
+</section>
+<section class="public-section">
+  <div class="public-container card-grid three">
+    {% for article in articles %}
+      {{ article_card(article) }}
+    {% endfor %}
+  </div>
+</section>
+<div class="public-container">{{ cta("لديك سؤال قانوني محدد؟", "محتوى المدونة عام، ويمكنك التواصل مع المكتب لدراسة حالتك بناءً على مستنداتك ووقائعك.") }}</div>
+{% endblock %}

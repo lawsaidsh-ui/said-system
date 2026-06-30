@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}أرصدة العملاء{% endblock %}
+{% block content %}
+<div class="finance-page accounting-clients-page">
+  <section class="finance-hero">
+    <div class="finance-hero-copy">
+      <p class="finance-eyebrow">أرصدة العملاء</p>
+      <h2 class="page-title">الذمم والبيانات المالية للعملاء</h2>
+      <p class="finance-lead">هذه الصفحة مخصصة للمحاسب لقراءة الأرصدة والمدفوعات والمستحقات فقط، بدون أي بيانات قانونية للعميل.</p>
+    </div>
+    <div class="finance-period-card">
+      <span>نطاق العرض</span>
+      <strong>مالي فقط</strong>
+      <small>المتابعة هنا تتم عبر الفواتير والمدفوعات وسجلات التحصيل، وليس عبر تفاصيل القضايا.</small>
+    </div>
+  </section>
+
+  {% if user.role != "accountant" %}
+    {% include "accounting/nav.html" %}
+  {% endif %}
+
+  <section class="finance-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">الذمم المدينة</p>
+        <h3 class="section-title">ملخص أرصدة العملاء</h3>
+        <p class="muted">الأرقام المعروضة تشمل الأتعاب المستحقة، الفواتير، المدفوعات، والمتبقي للتحصيل.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="finance-table accounting-clients-table">
+        <thead>
+          <tr>
+            <th>العميل</th>
+            <th>إجمالي الأتعاب المستحقة</th>
+            <th>قضايا معلقة بشرط</th>
+            <th>إجمالي الفواتير</th>
+            <th>مدفوعات الفواتير</th>
+            <th>المدفوع</th>
+            <th>المتبقي</th>
+            <th>إجراءات مالية</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+          <tr>
+            <td data-label="العميل"><strong>{{ row.client_name }}</strong></td>
+            <td data-label="إجمالي الأتعاب المستحقة">{{ row.agreed }}</td>
+            <td data-label="قضايا معلقة بشرط">{{ row.contingent }}</td>
+            <td data-label="إجمالي الفواتير">{{ row.invoice_total }}</td>
+            <td data-label="مدفوعات الفواتير">{{ row.invoice_paid }}</td>
+            <td data-label="المدفوع">{{ row.paid }}</td>
+            <td data-label="المتبقي"><strong>{{ row.remaining }}</strong></td>
+            <td class="actions" data-label="إجراءات مالية">
+              <a class="btn btn-secondary" href="/invoices?client_id={{ row.client_id }}">الفواتير</a>
+              <a class="btn btn-secondary" href="/payments?client_id={{ row.client_id }}">المدفوعات</a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">لا توجد بيانات مالية للعملاء.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

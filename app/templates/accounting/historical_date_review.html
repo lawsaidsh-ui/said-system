@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">مراجعة البيانات المالية القديمة</h2>
+{% include "accounting/nav.html" %}
+
+<section class="panel finance-date-warning">
+  <strong>سجلات تحتاج مراجعة محاسبية</strong>
+  <p>تعرض هذه الصفحة كل السجلات التي تحمل تاريخًا تقديريًا أو غير معروف حتى يستطيع المحاسب تثبيت التاريخ الحقيقي لاحقًا أو إبقاءها كبند افتتاحي.</p>
+</section>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <tr><th>النوع</th><th>الرقم/التصنيف</th><th>الطرف</th><th>التاريخ المستخدم</th><th>المبلغ</th><th>حالة التاريخ</th><th>الملاحظة</th><th>الإجراء</th></tr>
+      {% for row in rows %}
+        <tr class="date-status-{{ row.date_status }}">
+          <td>{{ row.kind }}</td>
+          <td>{{ row.number }}</td>
+          <td>{{ row.client }}</td>
+          <td>{{ row.date }}</td>
+          <td>{{ row.amount }}</td>
+          <td><span class="badge {{ date_status_badge(row.date_status) }}">{{ date_status_options.get(row.date_status, row.date_status) }}</span></td>
+          <td>{{ row.date_note or '-' }}</td>
+          <td>{% if row.url %}<a class="btn btn-secondary" href="{{ row.url }}">فتح</a>{% else %}-{% endif %}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8">لا توجد سجلات تقديرية أو غير مؤكدة.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta with context %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">خدمة قانونية في {{ service_area }}</p>
+    <h1>{{ service.title }}</h1>
+    <p>{{ service.summary }}</p>
+    <div class="hero-actions compact">
+      <a class="public-btn primary" href="{{ whatsapp_url }}">طلب استشارة</a>
+      <a class="public-btn secondary" href="tel:{{ phone_tel }}">اتصال</a>
+    </div>
+  </div>
+</section>
+<section class="public-section">
+  <div class="public-container content-layout">
+    <article class="prose-box">
+      {% for heading, body in service.sections %}
+      <h2>{{ heading }}</h2>
+      <p>{{ body }}</p>
+      {% endfor %}
+      <div class="legal-note">
+        <strong>تنبيه قانوني:</strong> المعلومات الواردة في هذه الصفحة عامة، ولا تغني عن استشارة قانونية مبنية على وقائع ومستندات حالتك.
+      </div>
+    </article>
+    <aside class="side-box">
+      <h2>تواصل مباشر</h2>
+      <p>اعرض موضوعك على المكتب لفهم الخيارات القانونية المتاحة في {{ service_area }}.</p>
+      <a class="public-btn primary full-width" href="{{ whatsapp_url }}">واتساب</a>
+      <a class="public-btn secondary full-width" href="tel:{{ phone_tel }}">اتصال</a>
+    </aside>
+  </div>
+</section>
+<section class="public-section muted-band">
+  <div class="public-container">
+    <div class="section-heading">
+      <p class="eyebrow">FAQ</p>
+      <h2>أسئلة شائعة حول {{ service.title }}</h2>
+    </div>
+    <div class="faq-list">
+      {% for question, answer in service.faqs %}
+      <details>
+        <summary>{{ question }}</summary>
+        <p>{{ answer }}</p>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<div class="public-container">{{ cta("هل تحتاج إلى مساعدة في " ~ service.title ~ "؟", "نساعدك في فهم موقفك القانوني والخطوات المناسبة دون وعود بنتائج غير مهنية.") }}</div>
+{% endblock %}

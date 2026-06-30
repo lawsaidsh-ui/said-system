@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}مكتب سعيد الشبيبي للمحاماة{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+{% if user %}
+{% set current_path = request.url.path %}
+<div class="app-shell">
+  <div class="sidebar-backdrop" data-sidebar-close></div>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">س</div>
+      <div>
+        <h1>مكتب سعيد الشبيبي للمحاماة</h1>
+        <p>نظام الإدارة الداخلي</p>
+      </div>
+    </div>
+    {% set nav = nav_for_role(user.role) %}
+    <nav class="nav-menu" aria-label="التنقل الرئيسي">
+      {% for href, text in nav %}
+        {% set is_active = current_path == href or (href != '/accounting' and current_path.startswith(href ~ '/')) %}
+        <a class="nav-link {% if is_active %}active{% endif %}" href="{{ href }}" {% if is_active %}aria-current="page"{% endif %}>
+          <span class="nav-dot" aria-hidden="true"></span>
+          <span>{{ text }}</span>
+        </a>
+      {% endfor %}
+    </nav>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-user">
+        <button class="icon-btn menu-toggle" type="button" data-sidebar-toggle aria-label="فتح القائمة">
+          <span></span><span></span><span></span>
+        </button>
+        <div>
+          <strong>{{ user.full_name }}</strong>
+          <span class="muted"> · {{ role_labels.get(user.role, user.role) }}</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="btn btn-secondary" href="/" target="_blank" rel="noopener">الموقع العام</a>
+        <a class="btn btn-secondary" href="/logout">تسجيل الخروج</a>
+      </div>
+    </div>
+    <section class="content">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+</div>
+{% include "partials/whatsapp_modal.html" %}
+{% else %}
+  {% block public_content %}{% endblock %}
+{% endif %}
+<script src="/static/app.js"></script>
+</body>
+</html>

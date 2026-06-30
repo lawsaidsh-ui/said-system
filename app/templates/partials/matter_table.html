@@ -1,0 +1,5 @@
+﻿<div class="table-wrap"><table><thead><tr><th>رقم المكتب</th><th>رقم الدعوى بالمحكمة</th><th>العنوان</th><th>العميل</th><th>الحالة</th><th></th></tr></thead><tbody>
+{% for matter in matters %}
+<tr><td data-label="رقم المكتب">{{ matter.case_number }}</td><td data-label="رقم الدعوى بالمحكمة">{{ matter.ministry_case_number or 'لم يصدر بعد' }}</td><td data-label="العنوان">{{ matter.title }}</td><td data-label="العميل">{{ matter.client.full_name if matter.client else '-' }}</td><td data-label="الحالة"><span class="badge {{ badge_class(matter.status) }}">{{ case_statuses.get(matter.status, matter.status) }}</span></td><td data-label="الإجراء"><a class="btn btn-secondary" href="/matters/{{ matter.id }}">عرض</a></td></tr>
+{% else %}<tr><td colspan="6">لا توجد بيانات.</td></tr>{% endfor %}
+</tbody></table></div>

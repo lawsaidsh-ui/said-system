@@ -1,0 +1,19 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta, service_card with context %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">الخدمات القانونية</p>
+    <h1>خدمات قانونية في سلطنة عمان</h1>
+    <p>صفحات خدمات مستقلة توضح نطاق العمل القانوني الذي يقدمه {{ office_name }} للأفراد والشركات، بلغة واضحة ومناسبة للعملاء.</p>
+  </div>
+</section>
+<section class="public-section">
+  <div class="public-container card-grid three">
+    {% for service in services %}
+      {{ service_card(service) }}
+    {% endfor %}
+  </div>
+</section>
+<div class="public-container">{{ cta() }}</div>
+{% endblock %}

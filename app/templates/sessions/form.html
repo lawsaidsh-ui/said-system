@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل جلسة' if session else 'جلسة جديدة' }}{% endblock %}
+{% block content %}
+<h2 class="page-title">{{ 'تعديل جلسة' if session else 'جلسة جديدة' }}</h2>
+<form class="panel form-grid" method="post" data-session-form>
+  <div class="field full autocomplete-field">
+    <label>بحث باسم العميل أو رقم الهاتف</label>
+    <input class="input" type="search" autocomplete="off" data-matter-client-search placeholder="اكتب اسم العميل أو رقم الجوال أو رقم القضية" value="{{ session.matter.client.full_name if session and session.matter and session.matter.client else '' }}">
+    <div class="autocomplete-results hidden" data-matter-client-results></div>
+  </div>
+  <div class="field">
+    <label>القضية</label>
+    <select name="matter_id" required data-matter-search-select data-session-matter-select>
+      <option value="">اختر القضية</option>
+      {% for matter in matters %}
+        <option
+          value="{{ matter.id }}"
+          data-client-id="{{ matter.client_id }}"
+          data-client-name="{{ matter.client.full_name if matter.client else '' }}"
+          data-client-phone="{{ matter.client.phone if matter.client and matter.client.phone else '' }}"
+          data-case-number="{{ matter.case_number }}"
+          data-ministry-case-number="{{ matter.ministry_case_number or '' }}"
+          data-title="{{ matter.title }}"
+          data-court-name="{{ matter.court_name or '' }}"
+          {% if session and session.matter_id==matter.id %}selected{% endif %}
+        >
+          {{ matter.case_number }}{% if matter.ministry_case_number %} / {{ matter.ministry_case_number }}{% endif %} - {{ matter.title }} - {{ matter.client.full_name if matter.client else '-' }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field"><label>تاريخ الجلسة</label><input class="input" type="date" name="session_date" required value="{{ session.session_date if session else '' }}"></div>
+  <div class="field"><label>الوقت</label><input class="input" type="time" name="session_time" value="{{ session.session_time.strftime('%H:%M') if session and session.session_time else '' }}"></div>
+  <div class="field"><label>المحكمة</label><input class="input" name="court_name" required value="{{ session.court_name if session else '' }}"></div>
+  <div class="field"><label>رقم القاعة</label><input class="input" name="hall_number" value="{{ session.hall_number if session else '' }}"></div>
+  <div class="field"><label>القاضي</label><input class="input" name="judge_name" value="{{ session.judge_name if session else '' }}"></div>
+  <div class="field"><label>الحالة</label><select name="session_status">{% for key,val in session_statuses.items() %}<option value="{{ key }}" {% if session and session.session_status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+  <div class="field"><label>الجلسة القادمة</label><input class="input" type="date" name="next_session_date" value="{{ session.next_session_date if session and session.next_session_date else '' }}"></div>
+  <div class="field full"><label>ملخص القرار</label><textarea name="decision_summary">{{ session.decision_summary if session else '' }}</textarea></div>
+  <div class="field full"><label>الإجراء القادم</label><textarea name="next_action">{{ session.next_action if session else '' }}</textarea></div>
+  <div class="field full"><label>ملاحظات</label><textarea name="notes">{{ session.notes if session else '' }}</textarea></div>
+  <div class="actions full"><button class="btn btn-primary" data-confirm="تأكيد الحفظ؟" type="submit">حفظ</button><a class="btn btn-secondary" href="/sessions">إلغاء</a></div>
+</form>
+{% endblock %}

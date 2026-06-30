@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">الحسابات البنكية والخزينة</h2>
+{% include "accounting/nav.html" %}
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <tr><th>الحساب</th><th>النوع</th><th>رصيد افتتاحي</th><th>الرصيد الحالي</th><th>الحالة</th></tr>
+      {% for a in accounts %}
+        <tr><td>{{ a.account_name }}</td><td>{{ a.account_type }}</td><td>{{ a.opening_balance }}</td><td>{{ a.current_balance }}</td><td>{{ 'نشط' if a.is_active else 'معطل' }}</td></tr>
+      {% else %}
+        <tr><td colspan="5">لا توجد حسابات.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <form class="filters" method="get">
+    <div class="field">
+      <label>فلتر حالة التاريخ</label>
+      <select name="date_status">
+        {% for key, label in date_status_filters.items() %}
+          <option value="{{ key }}" {% if selected_date_status == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">عرض</button>
+  </form>
+</section>
+
+<section class="panel">
+  <h3 class="section-title">حركة الحسابات حسب حالة التاريخ</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>التاريخ</th><th>النوع</th><th>المصدر</th><th>الطرف</th><th>المبلغ</th><th>الطريقة</th><th>حالة التاريخ</th></tr>
+      {% for row in transactions %}
+        <tr class="date-status-{{ row.date_status or 'confirmed' }}">
+          <td>{{ row.date }}</td>
+          <td>{{ row.kind }}</td>
+          <td>{{ row.source }}</td>
+          <td>{{ row.party }}</td>
+          <td>{{ row.amount }}</td>
+          <td>{{ payment_methods.get(row.method, row.method) }}</td>
+          <td><span class="badge {{ date_status_badge(row.date_status) }}">{{ date_status_options.get(row.date_status or 'confirmed', row.date_status or 'confirmed') }}</span>{% if row.date_note %}<small>{{ row.date_note }}</small>{% endif %}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7">لا توجد حركات مطابقة للفلتر.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+{% endblock %}

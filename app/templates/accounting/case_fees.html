@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% block title %}أتعاب القضايا{% endblock %}
+{% block content %}
+<div class="finance-page case-fees-page">
+  <section class="finance-hero">
+    <div class="finance-hero-copy">
+      <p class="finance-eyebrow">أتعاب القضايا</p>
+      <h2 class="page-title">فصل الأتعاب المستحقة عن الأتعاب المعلقة</h2>
+      <p class="finance-lead">الأتعاب العادية تظهر كمستحقات قابلة للتحصيل مباشرة، أما الدفع عند الفوز أو الباقي عند الحكم فيبقى معلقاً ولا يتحول إلى مستحق إلا بعد تحقق الشرط.</p>
+    </div>
+    <div class="finance-period-card">
+      <span>قاعدة العرض</span>
+      <strong>نوعان منفصلان</strong>
+      <small>هذا الفصل يمنع احتساب الأتعاب المعلقة ضمن المستحقات العادية قبل تحقق شرطها.</small>
+    </div>
+  </section>
+
+  {% if user.role != "accountant" %}
+    {% include "accounting/nav.html" %}
+  {% endif %}
+
+  <section class="finance-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">إدخال جديد</p>
+        <h3 class="section-title">إضافة أتعاب قضية</h3>
+      </div>
+    </div>
+    <form class="form-grid" method="post" data-case-fee-form>
+      <div class="field full autocomplete-field">
+        <label>بحث باسم العميل أو رقم الهاتف</label>
+        <input class="input" type="search" autocomplete="off" data-matter-client-search placeholder="اكتب اسم العميل أو رقم الجوال أو رقم القضية">
+        <div class="autocomplete-results hidden" data-matter-client-results></div>
+      </div>
+      <div class="field full">
+        <label>القضايا</label>
+        <select class="hidden" data-matter-search-select data-multiple-matters>
+          <option value="" disabled>اختر القضية</option>
+          {% for matter in matters %}
+            <option
+              value="{{ matter.id }}"
+              {% if selected_matter_id == matter.id %}selected{% endif %}
+              data-client-id="{{ matter.client_id }}"
+              data-client-name="{{ matter.client.full_name if matter.client else '' }}"
+              data-client-phone="{{ matter.client.phone if matter.client and matter.client.phone else '' }}"
+              data-case-number="{{ matter.case_number }}"
+              data-ministry-case-number="{{ matter.ministry_case_number or '' }}"
+              data-title="{{ matter.title }}"
+            >
+              {{ matter.case_number }}{% if matter.ministry_case_number %} / {{ matter.ministry_case_number }}{% endif %} - {{ matter.title }} - {{ matter.client.full_name if matter.client else '-' }}
+            </option>
+          {% endfor %}
+        </select>
+        <div class="matter-checklist" data-matter-checklist>
+          {% for matter in matters %}
+            <label
+              class="matter-check-item"
+              data-client-id="{{ matter.client_id }}"
+              data-client-name="{{ matter.client.full_name if matter.client else '' }}"
+              data-client-phone="{{ matter.client.phone if matter.client and matter.client.phone else '' }}"
+              data-case-number="{{ matter.case_number }}"
+              data-ministry-case-number="{{ matter.ministry_case_number or '' }}"
+              data-title="{{ matter.title }}"
+            >
+              <input type="checkbox" name="matter_ids" value="{{ matter.id }}" {% if selected_matter_id == matter.id %}checked{% endif %}>
+              <span>
+                <strong>{{ matter.case_number }}{% if matter.ministry_case_number %} / {{ matter.ministry_case_number }}{% endif %}</strong>
+                <small>{{ matter.title }} - {{ matter.client.full_name if matter.client else '-' }}</small>
+              </span>
+            </label>
+          {% endfor %}
+        </div>
+        <p class="field-hint">اختر العميل من البحث، ثم ضع علامة على كل القضايا التي لها نفس السعر المتفق عليه.</p>
+      </div>
+      <div class="field">
+        <label>طريقة الدفع</label>
+        <select name="payment_plan" data-case-fee-payment-plan>
+          {% for key, val in payment_plans.items() %}
+            <option value="{{ key }}">{{ val }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field" data-case-fee-field="standard installments judgment">
+        <label>إجمالي الأتعاب المتفق عليها</label>
+        <input class="input" type="number" step="0.01" name="fee_amount" value="0" data-required-for="one_time installments advance_judgment">
+        <p class="field-hint">تستخدم للدفعة الواحدة أو الأقساط أو مقدم والباقي عند الحكم، وتترك 0 عند الدفع عند الفوز.</p>
+      </div>
+      <div class="field" data-case-fee-field="success">
+        <label>نسبة الدفع عند الفوز %</label>
+        <input class="input" type="number" step="0.01" name="success_percentage" value="0" data-required-for="success_fee advance_success_fee">
+        <p class="field-hint">تستخدم عند اختيار الدفع عند الفوز، سواء بدون مقدم أو مع مقدم ثابت.</p>
+      </div>
+      <div class="field" data-case-fee-field="standard installments judgment success_advance">
+        <label>دفعة مقدمة</label>
+        <input class="input" type="number" step="0.01" name="advance_payment" value="0" data-required-for="advance_success_fee">
+      </div>
+      <div class="field" data-case-fee-field="installments">
+        <label>قسط شهري</label>
+        <input class="input" type="number" step="0.01" name="monthly_installment" value="0" data-required-for="installments">
+      </div>
+      <div class="field" data-case-fee-field="standard installments">
+        <label>تاريخ الاستحقاق</label>
+        <input class="input" type="date" name="due_date">
+      </div>
+      <div class="form-section full case-fee-mode-note" data-case-fee-note="one_time">
+        <h4>دفعة واحدة</h4>
+        <p>سجل قيمة الأتعاب وتاريخ الاستحقاق. يظهر السجل مباشرة ضمن الأتعاب العادية والمستحقات القابلة للتحصيل.</p>
+      </div>
+      <div class="form-section full case-fee-mode-note hidden" data-case-fee-note="installments">
+        <h4>أقساط</h4>
+        <p>سجل إجمالي الأتعاب والقسط الشهري والدفعة المقدمة إن وجدت. يبقى السجل ضمن الأتعاب العادية.</p>
+      </div>
+      <div class="form-section full case-fee-mode-note hidden" data-case-fee-note="success_fee">
+        <h4>الدفع عند الفوز</h4>
+        <p>سجل النسبة فقط. لن يحتسب النظام مبلغاً مستحقاً الآن، وسيظهر السجل في قسم الدفع عند الفوز حتى يتم تحويله بعد إدخال مبلغ الفوز.</p>
+      </div>
+      <div class="form-section full case-fee-mode-note hidden" data-case-fee-note="advance_success_fee">
+        <h4>مقدم والباقي نسبة عند الفوز</h4>
+        <p>سجل المقدم المدفوع والنسبة. عند تحقق الفوز سيحسب النظام الأتعاب المستحقة = المقدم + النسبة من مبلغ الفوز.</p>
+      </div>
+      <div class="form-section full case-fee-mode-note hidden" data-case-fee-note="advance_judgment">
+        <h4>مقدم والباقي عند الحكم</h4>
+        <p>سجل إجمالي الأتعاب والمقدم المدفوع. سيبقى الباقي معلقاً وغير محسوب ضمن المستحقات العادية حتى يتم تحويله عند صدور الحكم.</p>
+      </div>
+      <div class="field full">
+        <label>ملاحظات</label>
+        <textarea name="notes"></textarea>
+      </div>
+      <div class="actions full">
+        <button class="btn btn-primary" type="submit">حفظ الأتعاب</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="finance-kpi-grid case-fee-kpis" aria-label="ملخص أتعاب القضايا">
+    <article class="finance-kpi revenue">
+      <span>الأتعاب العادية</span>
+      <strong>{{ standard_summary.total }}</strong>
+      <small>{{ standard_summary.count }} سجل مستحق مباشرة وغير معلق بشرط.</small>
+    </article>
+    <article class="finance-kpi neutral">
+      <span>المحصّل من الأتعاب العادية</span>
+      <strong>{{ standard_summary.paid }}</strong>
+      <small>دفعات مقدمة أو مبالغ مسددة على أتعاب ثابتة أو أقساط.</small>
+    </article>
+    <article class="finance-kpi warning">
+      <span>مقدم والباقي عند الحكم</span>
+      <strong>{{ judgment_summary.count }}</strong>
+      <small>{{ judgment_summary.pending }} قضية معلقة، والباقي المعلق {{ judgment_summary.remaining_pending }}.</small>
+    </article>
+    <article class="finance-kpi warning">
+      <span>قضايا دفع عند الفوز</span>
+      <strong>{{ success_summary.count }}</strong>
+      <small>{{ success_summary.pending }} قضية ما زالت مشروطة بالفوز، وتشمل النسبة فقط أو مقدم مع نسبة.</small>
+    </article>
+    <article class="finance-kpi profit">
+      <span>تحولت إلى مستحق بعد الفوز</span>
+      <strong>{{ success_summary.converted_total }}</strong>
+      <small>مبالغ محسوبة من نسبة الفوز بعد تحقق الشرط.</small>
+    </article>
+  </section>
+
+  <section class="finance-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">مستحقات مباشرة</p>
+        <h3 class="section-title">الأتعاب العادية</h3>
+        <p class="muted">دفعة واحدة أو أقساط. هذه البنود تدخل ضمن المتابعة والتحصيل الطبيعي.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="finance-table case-fees-table">
+        <thead>
+          <tr><th>القضية</th><th>العميل</th><th>طريقة الدفع</th><th>الأتعاب المستحقة</th><th>المدفوع</th><th>الاستحقاق</th><th>الحالة</th><th>إلغاء</th></tr>
+        </thead>
+        <tbody>
+        {% for fee in standard_fees %}
+          <tr>
+            <td data-label="القضية">
+              {% if fee.group_key and group_labels.get(fee.group_key) %}
+                <strong>سعر واحد لعدة قضايا</strong>
+                <span class="case-fee-scope multi">أكثر من قضية - {{ group_labels.get(fee.group_key)|length }}</span>
+                {% for label in group_labels.get(fee.group_key) %}
+                  <small>{{ label }}</small>
+                {% endfor %}
+              {% else %}
+                <strong>{{ fee.matter.case_number if fee.matter else '-' }}</strong>
+                <span class="case-fee-scope single">قضية واحدة</span>
+                <small>{{ fee.matter.title if fee.matter else '' }}</small>
+              {% endif %}
+            </td>
+            <td data-label="العميل">{{ fee.client.full_name if fee.client else '-' }}</td>
+            <td data-label="طريقة الدفع">{{ payment_plans.get(fee.payment_plan, fee.payment_plan) }}</td>
+            <td data-label="الأتعاب المستحقة">{{ fee.fee_amount }}</td>
+            <td data-label="المدفوع">{{ fee.paid_amount }}</td>
+            <td data-label="الاستحقاق">{{ fee.due_date or '-' }}</td>
+            <td data-label="الحالة"><span class="badge {{ badge_class(fee.status) }}">{{ fee_statuses.get(fee.status, fee.status) }}</span></td>
+            <td class="actions" data-label="إلغاء">
+              {% if not fee.is_cancelled %}
+                <form method="post" action="/accounting/case-fees/{{ fee.id }}/cancel" class="inline-form">
+                  <input class="input" name="cancel_reason" placeholder="سبب الإلغاء" required>
+                  <button class="btn btn-danger" type="submit">إلغاء</button>
+                </form>
+              {% else %}
+                ملغي
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">لا توجد أتعاب عادية.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="finance-panel success-fees-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">باقي معلق</p>
+        <h3 class="section-title">أتعاب مقدم والباقي عند الحكم</h3>
+        <p class="muted">المقدم مسجل كمدفوع، أما الباقي فلا يدخل ضمن المستحقات العادية حتى يتم تحويله بعد صدور الحكم.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="finance-table case-fees-table">
+        <thead>
+          <tr><th>القضية</th><th>العميل</th><th>إجمالي الأتعاب</th><th>المقدم المدفوع</th><th>الباقي عند الحكم</th><th>الاستحقاق</th><th>الحالة</th><th>تحويل عند الحكم</th><th>إلغاء</th></tr>
+        </thead>
+        <tbody>
+        {% for fee in judgment_fees %}
+          <tr>
+            <td data-label="القضية">
+              {% if fee.group_key and group_labels.get(fee.group_key) %}
+                <strong>سعر واحد لعدة قضايا</strong>
+                <span class="case-fee-scope multi">أكثر من قضية - {{ group_labels.get(fee.group_key)|length }}</span>
+                {% for label in group_labels.get(fee.group_key) %}
+                  <small>{{ label }}</small>
+                {% endfor %}
+              {% else %}
+                <strong>{{ fee.matter.case_number if fee.matter else '-' }}</strong>
+                <span class="case-fee-scope single">قضية واحدة</span>
+                <small>{{ fee.matter.title if fee.matter else '' }}</small>
+              {% endif %}
+            </td>
+            <td data-label="العميل">{{ fee.client.full_name if fee.client else '-' }}</td>
+            <td data-label="إجمالي الأتعاب">{{ fee.fee_amount }}</td>
+            <td data-label="المقدم المدفوع">{{ fee.paid_amount }}</td>
+            <td data-label="الباقي عند الحكم">{{ fee.fee_amount - fee.paid_amount }}</td>
+            <td data-label="الاستحقاق">{{ fee.due_date or '-' }}</td>
+            <td data-label="الحالة">
+              {% if fee.status == 'contingent' %}
+                <span class="badge badge-yellow">معلق حتى الحكم</span>
+              {% else %}
+                <span class="badge {{ badge_class(fee.status) }}">{{ fee_statuses.get(fee.status, fee.status) }}</span>
+              {% endif %}
+            </td>
+            <td class="actions" data-label="تحويل عند الحكم">
+              {% if fee.status == 'contingent' and not fee.is_cancelled %}
+                <form method="post" action="/accounting/case-fees/{{ fee.id }}/mark-judgment-issued" class="inline-form">
+                  <input class="input" type="date" name="due_date">
+                  <button class="btn btn-primary" type="submit" data-confirm="تأكيد تحويل باقي الأتعاب إلى مستحق بعد صدور الحكم؟">صدر الحكم</button>
+                </form>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td class="actions" data-label="إلغاء">
+              {% if not fee.is_cancelled %}
+                <form method="post" action="/accounting/case-fees/{{ fee.id }}/cancel" class="inline-form">
+                  <input class="input" name="cancel_reason" placeholder="سبب الإلغاء" required>
+                  <button class="btn btn-danger" type="submit">إلغاء</button>
+                </form>
+              {% else %}
+                ملغي
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9">لا توجد أتعاب مقدم والباقي عند الحكم.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="finance-panel success-fees-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">التزام مشروط</p>
+        <h3 class="section-title">أتعاب الدفع عند الفوز</h3>
+        <p class="muted">هذه القضايا مفصولة عن الأتعاب العادية. النسبة فقط لا يظهر لها مبلغ مستحق إلا بعد الفوز، أما مقدم مع نسبة فيظهر المقدم كمدفوع ويُحسب الباقي بعد إدخال مبلغ الفوز.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="finance-table case-fees-table">
+        <thead>
+          <tr><th>القضية</th><th>العميل</th><th>طريقة الدفع</th><th>النسبة</th><th>المقدم</th><th>مبلغ الفوز</th><th>الأتعاب بعد الفوز</th><th>المدفوع</th><th>الاستحقاق</th><th>الحالة</th><th>تحويل</th><th>إلغاء</th></tr>
+        </thead>
+        <tbody>
+        {% for fee in success_fees %}
+          <tr>
+            <td data-label="القضية">
+              {% if fee.group_key and group_labels.get(fee.group_key) %}
+                <strong>سعر واحد لعدة قضايا</strong>
+                <span class="case-fee-scope multi">أكثر من قضية - {{ group_labels.get(fee.group_key)|length }}</span>
+                {% for label in group_labels.get(fee.group_key) %}
+                  <small>{{ label }}</small>
+                {% endfor %}
+              {% else %}
+                <strong>{{ fee.matter.case_number if fee.matter else '-' }}</strong>
+                <span class="case-fee-scope single">قضية واحدة</span>
+                <small>{{ fee.matter.title if fee.matter else '' }}</small>
+              {% endif %}
+            </td>
+            <td data-label="العميل">{{ fee.client.full_name if fee.client else '-' }}</td>
+            <td data-label="طريقة الدفع">{{ payment_plans.get(fee.payment_plan, fee.payment_plan) }}</td>
+            <td data-label="النسبة">{{ fee.success_percentage or 0 }}%</td>
+            <td data-label="المقدم">{{ fee.advance_payment if fee.payment_plan == 'advance_success_fee' else '-' }}</td>
+            <td data-label="مبلغ الفوز">{{ fee.won_amount or '-' }}</td>
+            <td data-label="الأتعاب بعد الفوز">{{ fee.fee_amount if fee.status != 'contingent' else '-' }}</td>
+            <td data-label="المدفوع">{{ fee.paid_amount }}</td>
+            <td data-label="الاستحقاق">{{ fee.due_date or '-' }}</td>
+            <td data-label="الحالة">
+              {% if fee.status == 'contingent' %}
+                <span class="badge badge-yellow">مشروط بالفوز</span>
+              {% else %}
+                <span class="badge {{ badge_class(fee.status) }}">{{ fee_statuses.get(fee.status, fee.status) }}</span>
+              {% endif %}
+            </td>
+            <td class="actions" data-label="تحويل">
+              {% if fee.status == 'contingent' and not fee.is_cancelled %}
+                <form method="post" action="/accounting/case-fees/{{ fee.id }}/mark-won" class="inline-form">
+                  <input class="input" type="number" step="0.01" name="won_amount" placeholder="مبلغ الفوز" required>
+                  <input class="input" type="date" name="due_date">
+                  <button class="btn btn-primary" type="submit" data-confirm="تأكيد حساب الأتعاب بعد الفوز؟">تحويل لمستحق</button>
+                </form>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td class="actions" data-label="إلغاء">
+              {% if not fee.is_cancelled %}
+                <form method="post" action="/accounting/case-fees/{{ fee.id }}/cancel" class="inline-form">
+                  <input class="input" name="cancel_reason" placeholder="سبب الإلغاء" required>
+                  <button class="btn btn-danger" type="submit">إلغاء</button>
+                </form>
+              {% else %}
+                ملغي
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="12">لا توجد قضايا دفع عند الفوز.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

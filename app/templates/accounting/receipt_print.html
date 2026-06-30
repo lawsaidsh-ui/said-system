@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>{{ receipt.receipt_number }}</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="no-print p-4"><button class="btn btn-primary" onclick="window.print()">طباعة</button></div>
+  <main class="print-page">
+    {% set fee_info = receipt_case_fee_labels.get(receipt.id) %}
+    {% set r_type = receipt.receipt_type or ("invoice" if receipt.invoice else "case_fee") %}
+    <h1>مكتب سعيد الشبيبي للمحاماة</h1>
+    <h2>سند قبض {{ receipt.receipt_number }}</h2>
+    <table>
+      <tr><th>نوع السند</th><td>{{ receipt_types.get(r_type, r_type) }}</td></tr>
+      <tr><th>العميل</th><td>{{ receipt.client.full_name }}</td></tr>
+      <tr>
+        <th>النطاق</th>
+        <td>
+          {% if fee_info and r_type == "case_fee" and fee_info.is_group %}
+            أتعاب مشتركة بين {{ fee_info.count }} قضايا:
+            {% for label in fee_info.labels %}{{ label }}{% if not loop.last %}، {% endif %}{% endfor %}
+            {% if receipt.invoice %} - الفاتورة {{ receipt.invoice.invoice_number }}{% endif %}
+          {% elif fee_info and r_type == "case_fee" and receipt.matter %}
+            أتعاب قضية واحدة - {{ receipt.matter.case_number }}
+            {% if receipt.invoice %} - الفاتورة {{ receipt.invoice.invoice_number }}{% endif %}
+          {% elif receipt.invoice %}
+            فاتورة {{ receipt.invoice.invoice_number }}{% if receipt.matter %} - القضية {{ receipt.matter.case_number }}{% endif %}
+          {% else %}
+            دفعة عامة
+          {% endif %}
+        </td>
+      </tr>
+      <tr><th>المبلغ</th><td>{{ receipt.amount }}</td></tr>
+      <tr><th>طريقة الدفع</th><td>{{ methods.get(receipt.payment_method, receipt.payment_method) }}</td></tr>
+      <tr><th>التاريخ</th><td>{{ receipt.received_at }}</td></tr>
+      <tr><th>المستلم</th><td>{{ receipt.received_by.full_name if receipt.received_by else '-' }}</td></tr>
+    </table>
+    <p class="mt-6">{{ receipt.notes or '' }}</p>
+  </main>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% extends "public/base.html" %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">حجز موعد</p>
+    <h1>احجز استشارة بهدوء ووضوح</h1>
+    <p>اختر الوقت المناسب، واترك لنا وصفًا مختصرًا. سنراجع الطلب ونتواصل معك لتأكيد التفاصيل بسرية.</p>
+  </div>
+</section>
+
+<section class="public-section">
+  <div class="public-container content-layout">
+    <article class="prose-box">
+      {% if success %}
+      <div class="success-box">
+        تم استلام طلب حجز الموعد بنجاح. سيتواصل معك المكتب لتأكيد التفاصيل.
+      </div>
+      {% endif %}
+      {% if error %}
+      <div class="error-box">{{ error }}</div>
+      {% endif %}
+
+      <form class="booking-date-form" method="get" action="/book-appointment">
+        <div class="field">
+          <label>اختر تاريخ الموعد لعرض الأوقات المتاحة</label>
+          <input class="input" type="date" name="appointment_date" value="{{ selected_date }}" min="{{ today }}" onchange="this.form.submit()">
+        </div>
+      </form>
+
+      <form class="form-grid mt-6 public-intake-form" method="post" action="/book-appointment">
+        <input type="hidden" name="appointment_date" value="{{ selected_date }}">
+        <input type="hidden" name="topic" value="طلب استشارة من الموقع">
+        <div class="field">
+          <label>الاسم</label>
+          <input class="input" name="client_name" required value="{{ form.client_name if form is defined else '' }}">
+        </div>
+        <div class="field">
+          <label>رقم الهاتف</label>
+          <input class="input" name="phone" required value="{{ form.phone if form is defined else '' }}">
+        </div>
+        <div class="field">
+          <label>وقت الموعد</label>
+          <select name="appointment_time" required>
+            {% for slot in available_slots %}
+              <option value="{{ slot.strftime('%H:%M') }}">{{ slot | time12 }}</option>
+            {% else %}
+              <option value="">لا توجد أوقات متاحة لهذا اليوم</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>نوع الطلب</label>
+          <select name="case_type">
+            <option value="">اختر نوع الطلب</option>
+            {% for ct in case_types %}
+              <option value="{{ ct }}" {% if form is defined and form.case_type == ct %}selected{% endif %}>{{ ct }}</option>
+            {% endfor %}
+            <option value="استشارة قانونية عامة" {% if form is defined and form.case_type == "استشارة قانونية عامة" %}selected{% endif %}>استشارة قانونية عامة</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>وصف مختصر</label>
+          <textarea name="message" placeholder="اكتب ملخصاً عاماً: ماذا حدث؟ ما المستند المهم؟ هل توجد مواعيد قريبة؟">{{ form.message if form is defined else '' }}</textarea>
+        </div>
+        <div class="actions full">
+          <button class="public-btn primary" type="submit" {% if not available_slots %}disabled{% endif %}>إرسال طلب الحجز</button>
+          <a class="public-btn secondary" href="{{ whatsapp_url }}">واتساب مباشر</a>
+        </div>
+        <p class="privacy-note full">كل ما ترسله يبقى سريًا ويُستخدم فقط لفهم طلبك.</p>
+      </form>
+    </article>
+    <aside class="side-box">
+      <h2>ماذا يحدث بعد الحجز؟</h2>
+      <p>بعد إرسال الطلب، يتواصل معك المكتب لتأكيد الموعد وما يلزم من مستندات أولية.</p>
+      <ul class="checked-list">
+        <li>من 3:00 مساءً إلى 7:00 مساءً.</li>
+        <li>مدة الموعد 30 دقيقة.</li>
+        <li>الحجز يصبح نهائياً بعد تواصل المكتب للتأكيد.</li>
+        <li>لا تحتاج إلى شرح كل التفاصيل من البداية.</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+{% endblock %}

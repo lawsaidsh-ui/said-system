@@ -1,0 +1,31 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta with context %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">من نحن</p>
+    <h1>{{ office_name }}</h1>
+    <p>مكتب محاماة يقدم خدمات قانونية للأفراد والشركات في {{ service_area }}، ويركز على الوضوح والسرية وفهم احتياجات العميل قبل اقتراح أي إجراء.</p>
+  </div>
+</section>
+<section class="public-section">
+  <div class="public-container split-grid">
+    <article class="prose-box">
+      <h2>رؤية المكتب</h2>
+      <p>يهدف {{ office_name }} إلى تقديم خدمات قانونية واضحة ومهنية تساعد العميل على فهم موقفه القانوني والخيارات المتاحة له. نؤمن أن العميل يحتاج إلى شرح مفهوم، وتقييم مسؤول، وتعامل يحفظ سرية معلوماته.</p>
+      <h2>كيف نتعامل مع الملفات؟</h2>
+      <p>نبدأ بفهم الوقائع، ثم مراجعة المستندات، ثم توضيح المسارات الممكنة. لا نقدم وعوداً بنتائج القضايا، بل نساعدك في اتخاذ قرار قانوني مبني على فهم أفضل للملف.</p>
+    </article>
+    <aside class="public-card emphasis">
+      <h2>قيم العمل</h2>
+      <ul class="checked-list">
+        <li>السرية في التعامل مع بيانات العملاء.</li>
+        <li>شرح قانوني واضح دون تعقيد.</li>
+        <li>تقييم مهني للمخاطر والخيارات.</li>
+        <li>احترام الإجراءات والمواعيد القانونية.</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+<div class="public-container">{{ cta("تحدث مع المكتب", "يمكنك إرسال ملخص موضوعك عبر واتساب أو الاتصال لطلب استشارة أولية.") }}</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}دليل الحسابات{% endblock %}
+{% block content %}
+<div class="finance-page chart-page">
+  <section class="finance-hero">
+    <div class="finance-hero-copy">
+      <p class="finance-eyebrow">دليل الحسابات</p>
+      <h2 class="page-title">شجرة حسابات مكتب المحاماة</h2>
+      <p class="finance-lead">شجرة حسابات عملية لمكتب محاماة تشمل الأصول، الالتزامات، الإيرادات، المصروفات، وأمانات العملاء مع فصل مصاريف القضايا القابلة للاسترداد عن المصروفات التشغيلية.</p>
+    </div>
+    <div class="finance-period-card">
+      <span>عدد الحسابات</span>
+      <strong>{{ accounts|length }}</strong>
+      <small>الحسابات مرتبة حسب الكود وتعرض بمستويات رئيسية وفرعية.</small>
+    </div>
+  </section>
+
+  {% if user.role != "accountant" %}
+    {% include "accounting/nav.html" %}
+  {% endif %}
+
+  {% set type_labels = {
+    "asset": "أصل",
+    "contra_asset": "أصل عكسي",
+    "liability": "التزام",
+    "revenue": "إيراد",
+    "contra_revenue": "إيراد عكسي",
+    "expense": "مصروف",
+    "equity": "حقوق ملكية"
+  } %}
+
+  <section class="finance-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">الشجرة المحاسبية</p>
+        <h3 class="section-title">كل الحسابات النشطة والفرعية</h3>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="finance-table chart-table">
+        <thead>
+          <tr><th>الكود</th><th>اسم الحساب</th><th>النوع</th><th>الحالة</th></tr>
+        </thead>
+        <tbody>
+        {% for a in accounts %}
+          {% set level = 0 if a.parent_id is none else (1 if a.code.endswith("00") else 2) %}
+          <tr class="chart-level-{{ level }}">
+            <td data-label="الكود"><strong>{{ a.code }}</strong></td>
+            <td data-label="اسم الحساب">
+              <span class="chart-account-name level-{{ level }}">{{ a.name }}</span>
+            </td>
+            <td data-label="النوع">{{ type_labels.get(a.account_type, a.account_type) }}</td>
+            <td data-label="الحالة"><span class="badge {% if a.is_active %}badge-green{% else %}badge-orange{% endif %}">{{ 'نشط' if a.is_active else 'معطل' }}</span></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">لا توجد حسابات.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

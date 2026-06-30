@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}التقارير{% endblock %}
+{% block content %}
+<div class="reports-page">
+  <h2 class="page-title">التقارير</h2>
+  <div class="grid-2">
+    <section class="panel">
+      <h3 class="section-title">القضايا حسب الحالة</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>الحالة</th><th>العدد</th></tr></thead>
+          <tbody>
+            {% for status,count in matters_by_status %}
+            <tr><td data-label="الحالة">{{ case_statuses.get(status, status) }}</td><td data-label="العدد">{{ count }}</td></tr>
+            {% else %}
+            <tr><td colspan="2">لا توجد بيانات.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="btn btn-secondary mt-4" href="/reports/export/matters_by_status.csv">تصدير CSV</a>
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">الإيرادات الشهرية</h3>
+      <div class="stat-card"><span>إجمالي المدفوعات</span><strong>{{ monthly_revenue }}</strong></div>
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">الجلسات القادمة</h3>
+      {% set sessions = upcoming_sessions %}
+      {% include "partials/session_table.html" %}
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">العملاء الجدد</h3>
+      {% set clients = new_clients %}
+      {% include "partials/client_table.html" %}
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">الفواتير غير المدفوعة</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>الفاتورة</th><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th></tr></thead>
+          <tbody>
+            {% for invoice in unpaid_invoices %}
+            <tr><td data-label="الفاتورة">{{ invoice.invoice_number }}</td><td data-label="الإجمالي">{{ invoice.total_amount }}</td><td data-label="المدفوع">{{ invoice.paid_amount }}</td><td data-label="الحالة">{{ invoice_statuses.get(invoice.status, invoice.status) }}</td></tr>
+            {% else %}
+            <tr><td colspan="4">لا توجد بيانات.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="btn btn-secondary mt-4" href="/reports/export/unpaid_invoices.csv">تصدير CSV</a>
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">أداء المحامين</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>المحامي</th><th>عدد القضايا</th></tr></thead>
+          <tbody>
+            {% for name,count in lawyer_performance %}
+            <tr><td data-label="المحامي">{{ name }}</td><td data-label="عدد القضايا">{{ count }}</td></tr>
+            {% else %}
+            <tr><td colspan="2">لا توجد بيانات.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

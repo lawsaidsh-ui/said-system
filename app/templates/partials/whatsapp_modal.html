@@ -1,0 +1,45 @@
+<dialog class="whatsapp-dialog" data-whatsapp-dialog>
+  <form method="dialog" class="dialog-head">
+    <div>
+      <h3>إرسال واتساب</h3>
+      <p class="muted" data-whatsapp-recipient>اختر قالب الرسالة قبل فتح واتساب.</p>
+    </div>
+    <button class="icon-btn" type="button" data-whatsapp-cancel aria-label="إغلاق">×</button>
+  </form>
+
+  <div class="whatsapp-body">
+    <div class="error-box hidden" data-whatsapp-error></div>
+    <div class="form-grid">
+      <div class="field">
+        <label>قالب الرسالة</label>
+        <select data-whatsapp-template></select>
+      </div>
+      <div class="field">
+        <label>رقم واتساب</label>
+        <input class="input" data-whatsapp-phone readonly>
+      </div>
+      <div class="field full">
+        <label>نص الرسالة قبل الإرسال</label>
+        <textarea data-whatsapp-message rows="8"></textarea>
+      </div>
+    </div>
+    <div class="whatsapp-vars">
+      <strong>متغيرات متاحة:</strong>
+      <span>{client_name}</span>
+      <span>{case_number}</span>
+      <span>{case_type}</span>
+      <span>{hearing_date}</span>
+      <span>{hearing_time}</span>
+      <span>{due_amount}</span>
+      <span>{due_date}</span>
+      <span>{appointment_date}</span>
+      <span>{appointment_time}</span>
+      <span>{office_name}</span>
+      <span>{office_address}</span>
+    </div>
+    <div class="actions mt-4">
+      <button class="btn btn-primary" type="button" data-whatsapp-open>فتح واتساب</button>
+      <button class="btn btn-secondary" type="button" data-whatsapp-cancel>إلغاء</button>
+    </div>
+  </div>
+</dialog>

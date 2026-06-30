@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}العملاء{% endblock %}
+{% block content %}
+<div class="clients-page">
+<div class="page-head"><h2 class="page-title mb-0">العملاء</h2><a class="btn btn-primary" href="/clients/new">عميل جديد</a></div>
+<section class="panel clients-filter-panel">
+  <form class="filters" method="get">
+    <div class="field"><label>بحث</label><input class="input" name="q" value="{{ q }}" placeholder="الاسم، الهاتف، الرقم المدني"></div>
+    <div class="field"><label>نوع العميل</label><select name="client_type"><option value="">الكل</option>{% for key,val in client_types.items() %}<option value="{{ key }}" {% if client_type==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+    <button class="btn btn-primary" type="submit">تصفية</button>
+  </form>
+</section>
+<section class="panel clients-list-panel">{% include "partials/client_table.html" %}</section>
+</div>
+{% endblock %}

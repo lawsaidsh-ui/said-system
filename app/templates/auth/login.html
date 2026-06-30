@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block public_content %}
+<main class="login-shell">
+  <section class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark" aria-hidden="true">س</div>
+      <div>
+        <h1>مكتب سعيد الشبيبي للمحاماة</h1>
+        <p>تسجيل الدخول إلى النظام الداخلي</p>
+      </div>
+    </div>
+    <div class="login-summary">
+      <strong>لوحة المدير تبدأ من متابعة الحجوزات، القضايا، المهام، والتحصيل في مكان واحد.</strong>
+    </div>
+    {% if error %}<div class="mb-4 rounded-lg bg-red-50 text-red-700 p-3">{{ error }}</div>{% endif %}
+    <form method="post" class="space-y-4">
+      <div class="field"><label>البريد الإلكتروني</label><input class="input" type="email" name="email" required></div>
+      <div class="field"><label>كلمة المرور</label><input class="input" type="password" name="password" required></div>
+      <button class="btn btn-primary w-full" type="submit">دخول</button>
+    </form>
+    <div class="login-footer">
+      <a class="text-link" href="/forgot-password">نسيت كلمة المرور؟</a>
+      <a class="text-link" href="/">العودة للموقع العام</a>
+    </div>
+  </section>
+</main>
+{% endblock %}

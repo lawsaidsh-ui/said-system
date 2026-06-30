@@ -1,0 +1,5 @@
+<div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>القضية</th><th>المحكمة</th><th>الحالة</th><th>واتساب</th><th></th></tr></thead><tbody>
+{% for session in sessions %}
+<tr><td data-label="التاريخ">{{ session.session_date }} {{ session.session_time or '' }}</td><td data-label="القضية">{{ session.matter.case_number if session.matter else '-' }}</td><td data-label="المحكمة">{{ session.court_name }}</td><td data-label="الحالة"><span class="badge {{ badge_class(session.session_status) }}">{{ session_statuses.get(session.session_status, session.session_status) }}</span></td><td data-label="واتساب"><button class="btn btn-secondary" type="button" data-whatsapp-source-type="session" data-whatsapp-source-id="{{ session.id }}">إرسال واتساب</button></td><td data-label="الإجراء"><a class="btn btn-secondary" href="/sessions/{{ session.id }}/edit">تعديل</a></td></tr>
+{% else %}<tr><td colspan="6">لا توجد بيانات.</td></tr>{% endfor %}
+</tbody></table></div>

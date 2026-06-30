@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}الجلسات{% endblock %}
+{% block content %}
+<div class="sessions-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">الجلسات</h2>
+    <a class="btn btn-primary" href="/sessions/new">جلسة جديدة</a>
+  </div>
+
+  <section class="panel sessions-filter-panel">
+    <form class="filters" method="get">
+      <div class="field"><label>من تاريخ</label><input class="input" type="date" name="date_from" value="{{ filters.date_from }}"></div>
+      <div class="field"><label>المحكمة</label><input class="input" name="court" value="{{ filters.court }}"></div>
+      <div class="field"><label>الحالة</label><select name="status"><option value="">الكل</option>{% for key,val in session_statuses.items() %}<option value="{{ key }}" {% if filters.status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+      <div class="field"><label>المحامي</label><select name="lawyer_id"><option value="">الكل</option>{% for lawyer in lawyers %}<option value="{{ lawyer.id }}" {% if filters.lawyer_id|string==lawyer.id|string %}selected{% endif %}>{{ lawyer.full_name }}</option>{% endfor %}</select></div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+    </form>
+  </section>
+
+  <section class="panel sessions-list-panel">{% include "partials/session_table.html" %}</section>
+</div>
+{% endblock %}

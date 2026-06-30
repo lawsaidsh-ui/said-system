@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="page-title">سندات القبض</h2>
+{% include "accounting/nav.html" %}
+
+<section class="panel">
+  <h3 class="section-title">سند قبض جديد - {{ next_no }}</h3>
+  <form class="form-grid" method="post" enctype="multipart/form-data" data-date-quality-form>
+    <div class="field">
+      <label>نوع السند</label>
+      <select name="receipt_type">
+        <option value="case_fee">أتعاب قضية</option>
+        <option value="invoice">فاتورة</option>
+        <option value="general">دفعة عامة</option>
+      </select>
+      <p class="field-hint">إذا اخترت فاتورة فلن يخصم السند من أتعاب القضية حتى لو كانت الفاتورة مرتبطة بقضية.</p>
+    </div>
+    <div class="field">
+      <label>العميل</label>
+      <select name="client_id" data-client-filter-source="receipt-form">
+        {% for client in clients %}
+          <option value="{{ client.id }}">{{ client.full_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>القضية</label>
+      <select name="matter_id" data-client-filter-target="receipt-form" data-empty-without-client>
+        <option value="">بدون</option>
+        {% for matter in matters %}
+          {% set fee_info = case_fee_payment_context.get(matter.id) %}
+          <option value="{{ matter.id }}" data-client-id="{{ matter.client_id }}" {% if fee_info and fee_info.paid %}disabled{% endif %}>
+            {{ matter.case_number }}{% if fee_info %} - {{ fee_info.label }}{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>الفاتورة</label>
+      <select name="invoice_id" data-client-filter-target="receipt-form" data-empty-without-client>
+        <option value="">بدون</option>
+        {% for invoice in invoices %}
+          <option value="{{ invoice.id }}" data-client-id="{{ invoice.client_id }}" {% if invoice.status == "paid" or invoice.paid_amount >= invoice.total_amount %}disabled{% endif %}>
+            {{ invoice.invoice_number }} - المتبقي {{ invoice.total_amount - invoice.paid_amount }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field"><label>المبلغ</label><input class="input" type="number" step="0.01" name="amount" required></div>
+    <div class="field"><label>طريقة الدفع</label><select name="payment_method">{% for key,val in methods.items() %}<option value="{{ key }}">{{ val }}</option>{% endfor %}</select></div>
+    <div class="field"><label>تاريخ الاستلام</label><input class="input" type="date" name="received_at" data-date-quality-date required></div>
+    <div class="field">
+      <label>هل تاريخ الدفع مؤكد؟</label>
+      <select name="date_status" data-date-quality-status required>
+        <option value="confirmed">نعم، التاريخ مؤكد</option>
+        <option value="estimated">لا، التاريخ تقديري</option>
+        <option value="unknown">لا أعرف تاريخ الدفع</option>
+      </select>
+    </div>
+    <div class="field"><label>رقم المرجع</label><input class="input" name="reference_no"></div>
+    <div class="field"><label>مرفق إيصال التحويل</label><input class="input" type="file" name="attachment"></div>
+    <div class="field full" data-date-quality-note-wrap><label>ملاحظة حالة التاريخ</label><textarea name="date_note" data-date-quality-note placeholder="مثال: تاريخ تقديري - تم إدخالها من ملفات مالية قديمة بدون تاريخ دفع مؤكد"></textarea></div>
+    <div class="field full"><label>ملاحظات</label><textarea name="notes"></textarea></div>
+    <button class="btn btn-primary" type="submit">إصدار سند قبض</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>الرقم</th>
+        <th>النوع</th>
+        <th>العميل</th>
+        <th>النطاق</th>
+        <th>المبلغ</th>
+        <th>الطريقة</th>
+        <th>التاريخ</th>
+        <th>حالة التاريخ</th>
+        <th>الحالة</th>
+        <th>المرفق</th>
+        <th></th>
+      </tr>
+      {% for r in receipts %}
+        {% set fee_info = receipt_case_fee_labels.get(r.id) %}
+        {% set r_type = r.receipt_type or ("invoice" if r.invoice else "case_fee") %}
+        <tr class="date-status-{{ r.date_status or 'confirmed' }}">
+          <td>{{ r.receipt_number }}</td>
+          <td>{{ receipt_types.get(r_type, r_type) }}</td>
+          <td>{{ r.client.full_name if r.client else '-' }}</td>
+          <td>
+            {% if fee_info and r_type == "case_fee" %}
+              {% if fee_info.is_group %}
+                <span class="case-fee-scope multi">أتعاب مشتركة - {{ fee_info.count }} قضايا</span>
+                {% for label in fee_info.labels %}
+                  <small>{{ label }}</small>
+                {% endfor %}
+              {% else %}
+                <span class="case-fee-scope single">أتعاب قضية واحدة</span>
+                {% if r.matter %}<small>{{ r.matter.case_number }}</small>{% endif %}
+              {% endif %}
+              {% if r.invoice %}<small>الفاتورة {{ r.invoice.invoice_number }}</small>{% endif %}
+            {% elif r.invoice %}
+              <strong>فاتورة {{ r.invoice.invoice_number }}</strong>
+              {% if r.matter %}<small>{{ r.matter.case_number }}</small>{% endif %}
+            {% elif r.matter %}
+              <strong>{{ r.matter.case_number }}</strong>
+            {% else %}
+              دفعة عامة
+            {% endif %}
+          </td>
+          <td>{{ r.amount }}</td>
+          <td>{{ methods.get(r.payment_method,r.payment_method) }}</td>
+          <td>{{ r.received_at }}</td>
+          <td><span class="badge {{ date_status_badge(r.date_status) }}">{{ date_status_options.get(r.date_status or 'confirmed', r.date_status or 'confirmed') }}</span>{% if r.date_note %}<small>{{ r.date_note }}</small>{% endif %}</td>
+          <td>
+            {% if r.status == "active" %}
+              <span class="badge badge-green">نشط</span>
+            {% else %}
+              <span class="badge badge-red">ملغي</span>
+              {% if r.cancel_reason %}<small>{{ r.cancel_reason }}</small>{% endif %}
+            {% endif %}
+          </td>
+          <td>{% if r.attachment_url %}<a href="{{ r.attachment_url }}">فتح</a>{% else %}-{% endif %}</td>
+          <td class="actions">
+            <a class="btn btn-secondary" href="/accounting/receipts/{{ r.id }}/print">طباعة</a>
+            {% if r.status == "active" %}
+              <form method="post" action="/accounting/receipts/{{ r.id }}/cancel" class="inline-form">
+                <input class="input" name="cancel_reason" placeholder="سبب الإلغاء" required>
+                <button class="btn btn-danger" type="submit" data-confirm="تأكيد إلغاء سند القبض وعكس أثره المالي؟">إلغاء</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="11">لا توجد سندات.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+{% endblock %}

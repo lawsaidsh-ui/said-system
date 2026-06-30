@@ -1,0 +1,189 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta, article_card with context %}
+{% block content %}
+<section class="public-hero">
+  <div class="public-container hero-grid">
+    <div class="hero-copy-block">
+      <p class="eyebrow">مكتب محاماة في {{ service_area }}</p>
+      <h1>لسنا هنا فقط لتمثيلك قانونيًا... نحن هنا لنخفف عنك ثقل القلق</h1>
+      <p class="hero-lead">عندما يصلك إنذار، مطالبة، حكم، أو تشعر أن القرار القادم قد يؤثر على حقوقك، تحتاج إلى جهة تسمعك بهدوء وتشرح لك الطريق بوضوح. في {{ office_name }} نتعامل مع كل معلومة بسرية ونرتب معك الخطوة التالية دون وعود غير مهنية.</p>
+      <div class="hero-actions">
+        <a class="public-btn primary" href="{{ whatsapp_url }}">تحدث معنا بسرية</a>
+        <a class="public-btn secondary" href="/book-appointment">احجز استشارة</a>
+      </div>
+      <ul class="trust-list">
+        <li>نساعدك على فهم موقفك قبل اتخاذ قرار تحت الضغط</li>
+        <li>نوضح لك الخيارات بلغة مفهومة بعيدة عن التعقيد</li>
+        <li>نتابع المواعيد والمستندات بتنظيم واحترام لظروفك</li>
+      </ul>
+    </div>
+    <aside class="hero-panel calm-panel" aria-label="ماذا يحدث عند التواصل مع المكتب">
+      <p class="panel-kicker">من أول رسالة</p>
+      <h2>لن تضطر لشرح كل شيء دفعة واحدة</h2>
+      <p>أرسل ملخصًا بسيطًا، وسنساعدك على ترتيب الوقائع والمستندات وفهم ما يستحق الاستعجال وما يمكن دراسته بهدوء.</p>
+      <dl>
+        <div><dt>السرية</dt><dd>كل معلومة تشاركها معنا تعامل بسرية</dd></div>
+        <div><dt>الوضوح</dt><dd>نشرح الخيارات والمخاطر دون تهويل</dd></div>
+        <div><dt>الخطوة التالية</dt><dd>نرتب معك ما يجب فعله أولًا</dd></div>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<section class="public-section">
+  <div class="public-container section-heading">
+    <p class="eyebrow">بعد تواصلك معنا</p>
+    <h2>خطوات بسيطة تطمئنك قبل أي إجراء</h2>
+    <p>لا نبدأ من التعقيد. نبدأ من سماع القصة، فهم المستندات، ثم توضيح الخيارات الممكنة بلغة واضحة.</p>
+  </div>
+  <div class="public-container process-steps">
+    <article>
+      <span>1</span>
+      <h3>نستمع لك بهدوء</h3>
+      <p>نمنحك مساحة لشرح ما حدث دون استعجال أو أحكام مسبقة.</p>
+    </article>
+    <article>
+      <span>2</span>
+      <h3>نفهم موقفك القانوني</h3>
+      <p>نراجع التفاصيل والمستندات والتواريخ المهمة لفهم الصورة بدقة.</p>
+    </article>
+    <article>
+      <span>3</span>
+      <h3>نوضح لك الخيارات</h3>
+      <p>نشرح المسارات المتاحة وما قد يحتاج إلى مستندات أو متابعة.</p>
+    </article>
+    <article>
+      <span>4</span>
+      <h3>نبدأ المتابعة معك</h3>
+      <p>نرتب الخطوة التالية ونوضح ما ينتظرك حتى لا تبقى في حالة قلق.</p>
+    </article>
+  </div>
+</section>
+
+<section class="public-section muted-band">
+  <div class="public-container section-heading">
+    <p class="eyebrow">الخدمات القانونية</p>
+    <h2>نخدمك في المواقف التي تحتاج وضوحًا وحماية</h2>
+    <p>كل خدمة تبدأ بفهم حالتك، لا بقالب جاهز. هدفنا أن تعرف موقفك وخياراتك قبل أن تتحرك.</p>
+  </div>
+  <div class="public-container card-grid three service-human-grid">
+    <article class="public-card service-card-human">
+      <h3><a href="/services/civil-cases-oman">القضايا المدنية</a></h3>
+      <p>عند وجود مطالبة مالية، تعويض، أو نزاع على حق مدني، نساعدك على فهم قوة موقفك وما تحتاجه من مستندات.</p>
+      <a class="text-link" href="/services/civil-cases-oman">تفاصيل الخدمة</a>
+    </article>
+    <article class="public-card service-card-human">
+      <h3><a href="/services/commercial-cases-oman">القضايا التجارية</a></h3>
+      <p>للشركات والتجار عند الخلافات، الفواتير، الشراكات، أو العقود. نرتب الملف ونوضح المسار الأنسب.</p>
+      <a class="text-link" href="/services/commercial-cases-oman">تفاصيل الخدمة</a>
+    </article>
+    <article class="public-card service-card-human">
+      <h3><a href="/services/labor-cases-oman">القضايا العمالية</a></h3>
+      <p>إذا كان النزاع متعلقًا بفصل، مستحقات، عقد عمل، أو إنذار، نساعدك على فهم حقوقك والتزاماتك.</p>
+      <a class="text-link" href="/services/labor-cases-oman">تفاصيل الخدمة</a>
+    </article>
+    <article class="public-card service-card-human">
+      <h3><a href="/services/family-law-oman">قضايا الأسرة</a></h3>
+      <p>نتعامل مع ملفات الأسرة بحساسية وسرية، مع شرح هادئ للخيارات التي تحفظ الحقوق وتراعي ظروف العائلة.</p>
+      <a class="text-link" href="/services/family-law-oman">تفاصيل الخدمة</a>
+    </article>
+    <article class="public-card service-card-human">
+      <h3><a href="/services/legal-consultation-oman">الاستشارات القانونية</a></h3>
+      <p>قبل توقيع، رد، شكوى، أو دعوى، تساعدك الاستشارة على رؤية الصورة كاملة واتخاذ قرار أكثر اتزانًا.</p>
+      <a class="text-link" href="/services/legal-consultation-oman">تفاصيل الخدمة</a>
+    </article>
+    <article class="public-card service-card-human">
+      <h3><a href="/services/contract-drafting-review-oman">صياغة ومراجعة العقود</a></h3>
+      <p>نراجع البنود والالتزامات والمخاطر قبل التوقيع، ونصيغ العقود بلغة واضحة تقلل الخلافات لاحقًا.</p>
+      <a class="text-link" href="/services/contract-drafting-review-oman">تفاصيل الخدمة</a>
+    </article>
+  </div>
+  <div class="public-container center-actions">
+    <a class="public-btn secondary" href="/services">عرض جميع الخدمات</a>
+  </div>
+</section>
+
+<section class="public-section reassurance-section">
+  <div class="public-container section-heading">
+    <p class="eyebrow">طمأنينة وثقة</p>
+    <h2>ما يهمك لا يقل أهمية عن الإجراء القانوني</h2>
+    <p>العميل لا يحتاج فقط إلى مادة قانونية، بل يحتاج إلى مكتب منظم يشرح، يتابع، ويحترم قلقه ووقته.</p>
+  </div>
+  <div class="public-container trust-card-grid">
+    <article><h3>سرية تامة</h3><p>كل معلومة تشاركها معنا تستخدم فقط لفهم طلبك والتعامل معه بمهنية.</p></article>
+    <article><h3>متابعة واضحة</h3><p>نوضح لك أين وصل الملف وما المطلوب منك في كل مرحلة.</p></article>
+    <article><h3>شرح مبسط</h3><p>نترجم الإجراءات والمصطلحات إلى كلام مفهوم يساعدك على القرار.</p></article>
+    <article><h3>التزام بالمواعيد</h3><p>نتعامل مع التواريخ والجلسات والمستندات باعتبارها جزءًا أساسيًا من حماية موقفك.</p></article>
+    <article><h3>احترام ظروف العميل</h3><p>نراعي أن بعض الملفات تأتي في وقت صعب، ونرتب التواصل بما يناسب الحالة.</p></article>
+  </div>
+</section>
+
+<section id="before-worry" class="public-section before-worry">
+  <div class="public-container split-grid">
+    <div>
+      <p class="eyebrow">قبل أن تقلق</p>
+      <h2>لا تتخذ قرارًا وأنت تحت الضغط</h2>
+      <p>إذا وصلك إنذار، حكم، إعلان، مطالبة مالية، أو استدعاء، لا تتجاهله ولا ترد بعجلة. أرسل لنا التفاصيل الأساسية وسنساعدك على فهم الخطوة القادمة بهدوء.</p>
+      <div class="hero-actions compact">
+        <a class="public-btn primary" href="{{ whatsapp_url }}">أرسل التفاصيل بسرية</a>
+        <a class="public-btn secondary" href="/contact">طرق التواصل</a>
+      </div>
+    </div>
+    <aside class="worry-note">
+      <h3>ما الذي يمكنك إرساله؟</h3>
+      <ul class="checked-list">
+        <li>صورة الإنذار أو الإعلان أو الحكم إن وجد.</li>
+        <li>ملخص قصير لما حدث وأهم التواريخ.</li>
+        <li>الموعد القريب أو آخر يوم للرد إن كان مذكورًا.</li>
+      </ul>
+      <p>لا يلزم أن تكون التفاصيل كاملة من البداية. المهم أن تبدأ بسؤال واضح وآمن.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="public-section">
+  <div class="public-container section-heading">
+    <p class="eyebrow">أسئلة شائعة</p>
+    <h2>إجابات قصيرة قبل التواصل</h2>
+  </div>
+  <div class="public-container faq-list warm-faq">
+    <details open>
+      <summary>هل الاستشارة سرية؟</summary>
+      <p>نعم. كل معلومة تشاركها معنا تعامل بسرية وتستخدم فقط لفهم طلبك.</p>
+    </details>
+    <details>
+      <summary>ماذا أحتاج قبل التواصل؟</summary>
+      <p>يكفي ملخص قصير، رقم للتواصل، وأي مستند مهم مثل عقد أو إنذار أو حكم.</p>
+    </details>
+    <details>
+      <summary>هل يمكن إرسال المستندات عبر واتساب؟</summary>
+      <p>يمكن إرسال طلب أولي عبر واتساب، ثم نرشدك للطريقة المناسبة لمشاركة المستندات.</p>
+    </details>
+    <details>
+      <summary>هل أحتاج زيارة المكتب؟</summary>
+      <p>ليس دائمًا. نبدأ بالتواصل الأولي، ثم نحدد إن كان الحضور ضروريًا بحسب الملف.</p>
+    </details>
+    <details>
+      <summary>متى أعرف موقف قضيتي؟</summary>
+      <p>بعد فهم الوقائع ومراجعة المستندات الأساسية نستطيع توضيح الصورة والخطوات الممكنة.</p>
+    </details>
+  </div>
+</section>
+
+<section class="public-section muted-band">
+  <div class="public-container section-heading">
+    <p class="eyebrow">المدونة القانونية</p>
+    <h2>مقالات وإجابات مبسطة لأسئلة قانونية شائعة</h2>
+  </div>
+  <div class="public-container card-grid three">
+    {% for article in articles[:3] %}
+      {{ article_card(article) }}
+    {% endfor %}
+  </div>
+  <div class="public-container center-actions">
+    <a class="public-btn secondary" href="/blog">عرض جميع المقالات</a>
+  </div>
+</section>
+
+<div class="public-container">{{ cta("ابدأ بخطوة هادئة", "أرسل ملخص موضوعك بسرية، وسنساعدك على فهم موقفك وترتيب الخطوة التالية.") }}</div>
+{% endblock %}

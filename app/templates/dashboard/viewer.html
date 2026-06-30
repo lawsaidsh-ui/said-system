@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}لوحة المشاهدة{% endblock %}
+{% block content %}
+<div class="role-dashboard">
+<h2 class="page-title">لوحة المشاهدة</h2>
+<section class="panel">
+  <strong>صلاحية مشاهدة فقط</strong>
+  <p class="muted mt-3">يمكنك استعراض البيانات المصرح بها دون إنشاء أو تعديل أو تسجيل دفعات أو رفع مستندات.</p>
+</section>
+<div class="stats-grid">
+  <div class="stat-card"><span>إجمالي العملاء</span><strong>{{ stats.clients }}</strong></div>
+  <div class="stat-card"><span>القضايا المفتوحة</span><strong>{{ stats.open_matters }}</strong></div>
+  <div class="stat-card"><span>جلسات هذا الأسبوع</span><strong>{{ stats.week_sessions }}</strong></div>
+  <div class="stat-card"><span>فواتير غير مدفوعة</span><strong>{{ stats.unpaid_invoices }}</strong></div>
+</div>
+<div class="grid-2">
+  <section class="panel"><h3 class="section-title">آخر القضايا</h3>{% set matters = recent_matters %}{% include "partials/matter_table.html" with context %}</section>
+  <section class="panel"><h3 class="section-title">الجلسات القادمة</h3>{% set sessions = upcoming_sessions %}{% include "partials/session_table.html" with context %}</section>
+  <section class="panel">
+    <h3 class="section-title">آخر الفواتير</h3>
+    <div class="table-wrap"><table><thead><tr><th>الفاتورة</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th></tr></thead><tbody>
+    {% for invoice in recent_invoices %}<tr><td data-label="الفاتورة">{{ invoice.invoice_number }}</td><td data-label="العميل">{{ invoice.client.full_name if invoice.client else '-' }}</td><td data-label="الإجمالي">{{ invoice.total_amount }}</td><td data-label="الحالة"><span class="badge {{ badge_class(invoice.status) }}">{{ invoice_statuses.get(invoice.status, invoice.status) }}</span></td></tr>{% else %}<tr><td colspan="4">لا توجد فواتير.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+</div>
+{% endblock %}

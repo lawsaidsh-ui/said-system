@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}المستندات{% endblock %}
+{% block content %}
+<div class="documents-page">
+<h2 class="page-title">المستندات</h2>
+<section class="panel documents-upload-panel">
+  <h3 class="section-title">رفع مستند</h3>
+  <form class="form-grid" method="post" enctype="multipart/form-data">
+    <div class="field"><label>العنوان</label><input class="input" name="title" required></div>
+    <div class="field">
+      <label>التصنيف</label>
+      <select name="document_type">
+        <option value="">بدون تصنيف</option>
+        {% for case_type in matter_case_types %}
+          <option value="{{ case_type }}">{{ case_type }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field full autocomplete-field">
+      <label>بحث عن العميل</label>
+      <input class="input" type="search" autocomplete="off" data-client-search placeholder="اكتب اسم العميل أو رقم الجوال أو الرقم المدني">
+      <div class="autocomplete-results hidden" data-client-search-results></div>
+      <select class="hidden" name="client_id" data-client-search-select data-client-filter-source="document-upload">
+        <option value="">بدون عميل</option>
+        {% for client in clients %}
+          <option
+            value="{{ client.id }}"
+            data-client-id="{{ client.id }}"
+            data-client-name="{{ client.full_name }}"
+            data-client-phone="{{ client.phone or '' }}"
+            data-client-civil-id="{{ client.civil_id or '' }}"
+            data-client-company="{{ client.company_name or '' }}"
+          >
+            {{ client.full_name }}{% if client.phone %} - {{ client.phone }}{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>القضية</label>
+      <select name="matter_id" data-client-filter-target="document-upload" data-empty-without-client>
+        <option value="">بدون قضية</option>
+        {% for matter in matters %}
+          <option value="{{ matter.id }}" data-client-id="{{ matter.client_id }}">
+            {{ matter.case_number }}{% if matter.ministry_case_number %} / {{ matter.ministry_case_number }}{% endif %} - {{ matter.title }}
+          </option>
+        {% endfor %}
+      </select>
+      <p class="field-hint">بعد اختيار العميل تظهر القضايا المرتبطة به فقط.</p>
+    </div>
+    <div class="field"><label>الملف</label><input class="input" type="file" name="file" required></div>
+    <label class="field flex items-center gap-2 mt-7"><input type="checkbox" name="is_confidential" value="1"> مستند سري</label>
+    <div class="field full"><label>ملاحظات</label><textarea name="notes"></textarea></div>
+    <div class="full"><button class="btn btn-primary" data-confirm="تأكيد رفع المستند؟" type="submit">رفع</button></div>
+  </form>
+</section>
+<section class="panel documents-list-panel"><h3 class="section-title">قائمة المستندات</h3><div class="table-wrap"><table><thead><tr><th>العنوان</th><th>النوع</th><th>العميل</th><th>القضية</th><th>رفعه</th><th>السرية</th><th>الملف</th></tr></thead><tbody>
+{% for doc in documents %}<tr><td data-label="العنوان">{{ doc.title }}</td><td data-label="النوع">{{ doc.document_type or '-' }}</td><td data-label="العميل">{{ doc.client.full_name if doc.client else '-' }}</td><td data-label="القضية">{{ doc.matter.case_number if doc.matter else '-' }}</td><td data-label="رفعه">{{ doc.uploaded_by.full_name if doc.uploaded_by else '-' }}</td><td data-label="السرية">{{ 'سري' if doc.is_confidential else 'عادي' }}</td><td data-label="الملف"><a class="btn btn-secondary" href="{{ doc.file_url }}">فتح</a></td></tr>{% else %}<tr><td colspan="7">لا توجد مستندات.</td></tr>{% endfor %}
+</tbody></table></div></section>
+</div>
+{% endblock %}

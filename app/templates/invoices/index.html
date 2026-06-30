@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}الفواتير{% endblock %}
+{% block content %}
+<div class="invoices-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">الفواتير والمدفوعات</h2>
+    <a class="btn btn-primary" href="/invoices/new">فاتورة جديدة</a>
+  </div>
+
+  <section class="panel invoices-filter-panel">
+    <form class="filters" method="get">
+      <div class="field"><label>رقم الفاتورة</label><input class="input" name="q" value="{{ filters.q }}"></div>
+      <div class="field"><label>العميل</label><select name="client_id"><option value="">الكل</option>{% for client in clients %}<option value="{{ client.id }}" {% if filters.client_id|string==client.id|string %}selected{% endif %}>{{ client.full_name }}</option>{% endfor %}</select></div>
+      <div class="field"><label>الحالة</label><select name="status"><option value="">الكل</option>{% for key,val in invoice_statuses.items() %}<option value="{{ key }}" {% if filters.status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+      <div class="field"><label>من تاريخ</label><input class="input" type="date" name="date_from" value="{{ filters.date_from }}"></div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+    </form>
+  </section>
+
+  <section class="panel invoices-list-panel">
+    <div class="table-wrap"><table><thead><tr><th>الفاتورة</th><th>العميل</th><th>الإصدار</th><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead><tbody>
+    {% for invoice in invoices %}<tr><td data-label="الفاتورة">{{ invoice.invoice_number }}</td><td data-label="العميل">{{ invoice.client.full_name if invoice.client else '-' }}</td><td data-label="الإصدار">{{ invoice.issue_date }}</td><td data-label="الإجمالي">{{ invoice.total_amount }}</td><td data-label="المدفوع">{{ invoice.paid_amount }}</td><td data-label="الحالة"><span class="badge {{ badge_class(invoice.status) }}">{{ invoice_statuses.get(invoice.status, invoice.status) }}</span></td><td data-label="الإجراء"><a class="btn btn-secondary" href="/invoices/{{ invoice.id }}">عرض</a></td></tr>{% else %}<tr><td colspan="7">لا توجد فواتير.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

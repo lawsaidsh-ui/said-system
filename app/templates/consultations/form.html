@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}استشارة جديدة{% endblock %}
+{% block content %}
+<h2 class="page-title">استشارة جديدة</h2>
+<form class="panel form-grid" method="post">
+  <div class="field"><label>العميل</label><select name="client_id"><option value="">غير مسجل</option>{% for client in clients %}<option value="{{ client.id }}">{{ client.full_name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>اسم طالب الاستشارة</label><input class="input" name="requester_name" required></div>
+  <div class="field"><label>الهاتف</label><input class="input" name="requester_phone" required></div>
+  <div class="field"><label>البريد</label><input class="input" type="email" name="requester_email"></div>
+  <div class="field"><label>نوع الاستشارة</label><input class="input" name="consultation_type"></div>
+  <div class="field"><label>الموضوع</label><input class="input" name="subject" required></div>
+  <div class="field"><label>الحالة</label><select name="status">{% for key,val in consultation_statuses.items() %}<option value="{{ key }}">{{ val }}</option>{% endfor %}</select></div>
+  <div class="field"><label>المحامي</label><select name="assigned_lawyer_id"><option value="">غير محدد</option>{% for lawyer in lawyers %}<option value="{{ lawyer.id }}">{{ lawyer.full_name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>تاريخ الاستشارة</label><input class="input" type="date" name="consultation_date"></div>
+  <div class="field"><label>الرسوم</label><input class="input" type="number" step="0.01" name="fee_amount" value="0"></div>
+  <div class="field full"><label>الوصف</label><textarea name="description"></textarea></div>
+  <div class="field full"><label>ملاحظات</label><textarea name="notes"></textarea></div>
+  <div class="actions full"><button class="btn btn-primary" type="submit">حفظ</button><a class="btn btn-secondary" href="/consultations">إلغاء</a></div>
+</form>
+{% endblock %}

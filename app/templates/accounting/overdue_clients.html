@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}العملاء المتعثرون ماليًا{% endblock %}
+{% block content %}
+<div class="overdue-page">
+  <div class="section-head">
+    <div>
+      <h2 class="page-title">العملاء المتعثرون ماليًا</h2>
+      <p class="muted">متابعة الفواتير والأقساط التي تجاوزت تاريخ الاستحقاق ولم تسدد بالكامل.</p>
+    </div>
+  </div>
+  {% include "accounting/nav.html" %}
+
+  <div class="stats-grid overdue-stats">
+    <div class="stat-card"><span>عدد العملاء المتعثرين</span><strong>{{ overdue_summary.overdue_clients_count }}</strong></div>
+    <div class="stat-card"><span>إجمالي المبالغ المتأخرة</span><strong>{{ overdue_summary.total_overdue_balance }}</strong><small>ريال عماني</small></div>
+    <div class="stat-card"><span>عدد الفواتير/الأقساط المتأخرة</span><strong>{{ overdue_summary.overdue_items_count }}</strong></div>
+    <div class="stat-card">
+      <span>أعلى عميل من حيث المتبقي</span>
+      {% if overdue_summary.top_clients %}
+        <strong>{{ overdue_summary.top_clients[0].balance }}</strong>
+        <small>{{ overdue_summary.top_clients[0].client_name }}</small>
+      {% else %}
+        <strong>0</strong><small>لا توجد مبالغ متأخرة</small>
+      {% endif %}
+    </div>
+  </div>
+
+  <section class="panel top-debtors-panel">
+    <div class="section-head">
+      <h3 class="section-title">أعلى 5 عملاء من حيث المبلغ المتبقي</h3>
+    </div>
+    <div class="table-wrap">
+      <table class="compact-table">
+        <tr><th>العميل</th><th>رقم الهاتف</th><th>المبلغ المتبقي</th><th>الإجراء</th></tr>
+        {% for item in overdue_summary.top_clients %}
+          <tr>
+            <td data-label="العميل">{{ item.client_name }}</td>
+            <td data-label="رقم الهاتف">{{ item.phone or '-' }}</td>
+            <td data-label="المبلغ المتبقي">{{ item.balance }}</td>
+            <td data-label="الإجراء"><a class="btn btn-secondary" href="/clients/{{ item.client.id }}">عرض العميل</a></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">لا توجد بيانات متأخرة.</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <form class="filters overdue-filters" method="get">
+      <div class="field">
+        <label>بحث باسم العميل أو رقم الهاتف</label>
+        <input class="input" name="q" value="{{ filters.q }}" placeholder="اسم العميل أو الهاتف">
+      </div>
+      <div class="field">
+        <label>مدة التأخير</label>
+        <select name="delay_bucket">
+          <option value="">كل المدد</option>
+          {% for key, label in delay_buckets.items() %}
+            <option value="{{ key }}" {% if filters.delay_bucket == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>المحامي</label>
+        <select name="lawyer_id">
+          <option value="">كل المحامين</option>
+          {% for lawyer in lawyers %}
+            <option value="{{ lawyer.id }}" {% if filters.lawyer_id == lawyer.id %}selected{% endif %}>{{ lawyer.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>القضية</label>
+        <select name="matter_id">
+          <option value="">كل القضايا</option>
+          {% for matter in matters %}
+            <option value="{{ matter.id }}" {% if filters.matter_id == matter.id %}selected{% endif %}>{{ matter.case_number }} - {{ matter.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>أقل مبلغ متبقي</label>
+        <input class="input" type="number" step="0.01" min="0" name="min_balance" value="{{ filters.min_balance }}">
+      </div>
+      <div class="field">
+        <label>أعلى مبلغ متبقي</label>
+        <input class="input" type="number" step="0.01" min="0" name="max_balance" value="{{ filters.max_balance }}">
+      </div>
+      <label class="check-field">
+        <input type="hidden" name="overdue_only" value="0">
+        <input type="checkbox" name="overdue_only" value="1" {% if filters.overdue_only %}checked{% endif %}>
+        <span>إظهار المتعثرين فقط</span>
+      </label>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">تطبيق الفلاتر</button>
+        <a class="btn btn-secondary" href="/accounting/overdue-clients">مسح</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel overdue-table-panel">
+    <div class="section-head">
+      <h3 class="section-title">جدول العملاء المتعثرين ماليًا</h3>
+      <span class="badge badge-blue">{{ rows|length }} سجل</span>
+    </div>
+    <div class="table-wrap">
+      <table class="overdue-table">
+        <tr>
+          <th>اسم العميل</th>
+          <th>رقم الهاتف</th>
+          <th>رقم الفاتورة أو القسط</th>
+          <th>اسم القضية</th>
+          <th>المبلغ الإجمالي</th>
+          <th>المبلغ المدفوع</th>
+          <th>المبلغ المتبقي</th>
+          <th>تاريخ الاستحقاق</th>
+          <th>أيام التأخير</th>
+          <th>حالة التعثر</th>
+          <th>الإجراءات</th>
+        </tr>
+        {% for row in rows %}
+          <tr>
+            <td data-label="اسم العميل">{{ row.client_name }}</td>
+            <td data-label="رقم الهاتف">{{ row.phone or '-' }}</td>
+            <td data-label="رقم الفاتورة أو القسط">{{ row.number }}</td>
+            <td data-label="اسم القضية">{{ row.matter_name }}</td>
+            <td data-label="المبلغ الإجمالي">{{ row.total_amount }}</td>
+            <td data-label="المبلغ المدفوع">{{ row.paid_amount }}</td>
+            <td data-label="المبلغ المتبقي"><strong>{{ row.balance }}</strong></td>
+            <td data-label="تاريخ الاستحقاق">{{ row.due_date }}</td>
+            <td data-label="أيام التأخير">{{ row.days_overdue }}</td>
+            <td data-label="حالة التعثر"><span class="badge {{ row.risk_badge }}">{{ row.risk_label }}</span></td>
+            <td data-label="الإجراءات">
+              <div class="actions">
+                {% if row.client_id %}<a class="btn btn-secondary" href="/clients/{{ row.client_id }}">عرض العميل</a>{% endif %}
+                <a class="btn btn-secondary" href="{{ row.detail_url }}">{{ row.detail_label }}</a>
+                <button class="btn btn-primary" type="button" data-overdue-whatsapp data-source-type="{{ row.source_type }}" data-source-id="{{ row.source_id }}">تذكير واتساب</button>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="11">لا توجد سجلات مطابقة للفلاتر الحالية.</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

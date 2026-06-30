@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}تقرير المالك المالي{% endblock %}
+{% block content %}
+{% set summary = report.summary %}
+{% set break_even = report.break_even %}
+{% set forecast = report.forecast %}
+{% set settings = report.settings %}
+{% set date_quality = report.date_quality %}
+<div class="owner-dashboard" data-report-root>
+  <div class="owner-header">
+    <div>
+      <p class="owner-eyebrow">Owner Financial Dashboard</p>
+      <h2 class="page-title">تقرير المالك المالي</h2>
+      <p class="muted">ملخص مالي مباشر للفترة {{ report.period.label }} من {{ report.period.start }} إلى {{ report.period.end }}.</p>
+    </div>
+    <div class="actions no-print">
+      <button class="btn btn-secondary" type="button" data-open-dialog="settingsDialog">الإعدادات المالية</button>
+      <button class="btn btn-secondary" type="button" data-open-dialog="monthlyReportDialog">تقرير المالك الشهري</button>
+      <button class="btn btn-secondary" type="button" data-export-excel>Export Excel</button>
+      <button class="btn btn-primary" type="button" onclick="window.print()">Export PDF / طباعة</button>
+    </div>
+  </div>
+
+  <section class="panel owner-filter-panel no-print">
+    <form class="filters owner-filters" method="get">
+      <div class="field">
+        <label>الفترة</label>
+        <select name="period">
+          {% for value, text in [("today","اليوم"),("week","هذا الأسبوع"),("month","هذا الشهر"),("quarter","هذا الربع"),("year","هذه السنة"),("custom","فترة مخصصة")] %}
+            <option value="{{ value }}" {% if report.filters.period == value %}selected{% endif %}>{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field"><label>من</label><input class="input" type="date" name="start_date" value="{{ report.filters.start_date or '' }}"></div>
+      <div class="field"><label>إلى</label><input class="input" type="date" name="end_date" value="{{ report.filters.end_date or '' }}"></div>
+      <div class="field">
+        <label>نوع الخدمة</label>
+        <select name="service_type">
+          <option value="">كل الخدمات</option>
+          {% for item in report.filter_options.service_types %}
+            <option value="{{ item }}" {% if report.filters.service_type == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>المحامي المسؤول</label>
+        <select name="lawyer_id">
+          <option value="">كل الفريق</option>
+          {% for lawyer in report.filter_options.lawyers %}
+            <option value="{{ lawyer.id }}" {% if report.filters.lawyer_id|string == lawyer.id|string %}selected{% endif %}>{{ lawyer.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>حالة التحصيل</label>
+        <select name="collection_status">
+          <option value="">كل الحالات</option>
+          {% for item in ["محصل","غير محصل","متأخر"] %}
+            <option value="{{ item }}" {% if report.filters.collection_status == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>مصدر العميل</label>
+        <select name="client_source">
+          <option value="">كل المصادر</option>
+          {% for item in report.filter_options.client_sources %}
+            <option value="{{ item }}" {% if report.filters.client_source == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">تطبيق الفلاتر</button>
+    </form>
+    <div class="api-state" data-api-state>جاري فحص اتصال API...</div>
+  </section>
+
+  {% if date_quality.has_uncertain %}
+    <section class="panel finance-date-warning">
+      <strong>تنبيه دقة البيانات المالية</strong>
+      <p>توجد بيانات مالية قديمة بتواريخ تقديرية أو غير مؤكدة، لذلك قد تختلف دقة تقارير الأرباح والخسائر ونقطة التعادل والتدفق النقدي التاريخية.</p>
+      <div class="date-quality-inline">
+        {% for key, row in date_quality.statuses.items() %}
+          <span class="badge {{ row.badge }}">{{ row.label }}: {{ row.count }}</span>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="stats-grid owner-kpis">
+    {% for item in [
+      ("إجمالي الإيرادات", summary.total_revenue, "قيمة الفواتير والخدمات المسجلة في الفترة."),
+      ("إجمالي المصاريف", summary.total_expenses, "يشمل المصاريف وسندات الصرف، وتدار الرواتب من المصاريف الثابتة."),
+      ("صافي الربح / الخسارة", summary.net_profit, "الإيرادات مطروحاً منها المصاريف."),
+      ("هامش الربح", summary.profit_margin ~ "%", "كلما ارتفعت النسبة كان التشغيل أكثر كفاءة."),
+      ("المبالغ المحصلة", summary.collected, "النقد الداخل من المدفوعات وسندات القبض."),
+      ("المبالغ غير المحصلة", summary.outstanding, "مبالغ متبقية تحتاج متابعة."),
+      ("المصاريف الثابتة الشهرية", summary.fixed_expenses, "بنود ثابتة مثل الرواتب والإيجار والاشتراكات."),
+      ("المصاريف المتغيرة", summary.variable_expenses, "مصروفات مرتبطة بالقضايا والتشغيل اليومي."),
+      ("عدد العملاء الجدد", summary.new_clients, "عدد العملاء المرتبطين بفواتير الفترة."),
+      ("عدد القضايا المفتوحة", summary.open_cases, "القضايا النشطة داخل المكتب حالياً."),
+      ("متوسط قيمة العميل", summary.average_client_value, "متوسط الإيراد لكل عميل في الفترة."),
+      ("متوسط تكلفة القضية", summary.average_case_cost, "متوسط المصروف مقابل كل فاتورة أو ملف."),
+      ("نسبة التحصيل", summary.collection_rate ~ "%", "نسبة المحصل من إجمالي الإيرادات."),
+      ("الفواتير المتأخرة", summary.overdue_invoices, "فواتير تجاوزت تاريخ الاستحقاق.")
+    ] %}
+      <div class="stat-card owner-stat">
+        <span>{{ item[0] }}</span>
+        <strong class="{% if item[1]|string|float < 0 %}text-red-700{% endif %}">{{ item[1] }}</strong>
+        <small>{{ item[2] }}</small>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid-2">
+    <section class="panel break-even-panel">
+      <div class="section-head">
+        <h3 class="section-title">نقطة التعادل</h3>
+        <span class="badge {% if break_even.remaining <= 0 %}badge-green{% else %}badge-yellow{% endif %}">
+          {{ "تم الوصول" if break_even.remaining <= 0 else "قيد الوصول" }}
+        </span>
+      </div>
+      <div class="break-even-number">{{ break_even.monthly_break_even }} ريال</div>
+      <p class="muted">نقطة التعادل = المصاريف الثابتة الشهرية ÷ متوسط هامش الربح.</p>
+      <div class="progress-track"><div style="width: {{ break_even.progress }}%"></div></div>
+      <div class="break-even-grid">
+        <div><span>المصاريف الثابتة</span><strong>{{ break_even.fixed_monthly_expenses }}</strong></div>
+        <div><span>متوسط الهامش</span><strong>{{ break_even.average_profit_margin }}%</strong></div>
+        <div><span>إيرادات الشهر الحالية</span><strong>{{ break_even.current_month_revenue }}</strong></div>
+        <div><span>المتبقي للتعادل</span><strong>{{ break_even.remaining }}</strong></div>
+        <div><span>عملاء/قضايا مطلوبة</span><strong>{{ break_even.required_clients }}</strong></div>
+        <div><span>تاريخ الوصول المتوقع</span><strong>{{ break_even.expected_date or "غير متاح" }}</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">تنبيهات ذكية للمالك</h3>
+      <div class="alert-list">
+        {% for alert in report.alerts %}
+          <p class="owner-alert {{ alert.level }}">{{ alert.text }}</p>
+        {% else %}
+          <p class="muted">لا توجد تنبيهات حالياً.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h3 class="section-title">الرسوم البيانية</h3>
+    <div class="chart-grid">
+      <div class="chart-box"><h4>الإيرادات مقابل المصاريف شهرياً</h4><canvas id="revenueExpenseChart"></canvas></div>
+      <div class="chart-box"><h4>صافي الربح والخسارة</h4><canvas id="profitChart"></canvas></div>
+      <div class="chart-box"><h4>توزيع الإيرادات حسب الخدمة</h4><canvas id="serviceChart"></canvas></div>
+      <div class="chart-box"><h4>توزيع المصاريف حسب التصنيف</h4><canvas id="expenseChart"></canvas></div>
+      <div class="chart-box"><h4>تطور التحصيل</h4><canvas id="collectionChart"></canvas></div>
+      <div class="chart-box"><h4>التقدم نحو نقطة التعادل</h4><canvas id="breakEvenChart"></canvas></div>
+    </div>
+  </section>
+
+  <div class="grid-2">
+    <section class="panel">
+      <h3 class="section-title">تحليل التحصيل</h3>
+      <div class="mini-metrics">
+        <div><span>إجمالي المستحقات</span><strong>{{ report.collection.total_due }}</strong></div>
+        <div><span>إجمالي المتأخرات</span><strong>{{ report.collection.overdue_total }}</strong></div>
+        <div><span>نسبة التحصيل</span><strong>{{ report.collection.collection_rate }}%</strong></div>
+      </div>
+      <div class="table-wrap mt-4"><table>
+        <tr><th>أعلى العملاء تأخراً</th><th>المتبقي</th><th>إجراء</th></tr>
+        {% for row in report.collection.top_overdue %}
+          <tr><td>{{ row.client }}</td><td>{{ row.remaining }}</td><td><button class="btn btn-secondary" type="button">تذكير واتساب/SMS</button></td></tr>
+        {% else %}
+          <tr><td colspan="3">لا توجد مستحقات متأخرة.</td></tr>
+        {% endfor %}
+      </table></div>
+      <p class="muted mt-3">فواتير مستحقة هذا الأسبوع: {{ report.collection.due_this_week|length }} · متأخرة أكثر من 30 يوم: {{ report.collection.overdue_over_30|length }}</p>
+    </section>
+
+    <section class="panel">
+      <h3 class="section-title">توقعات نهاية الشهر</h3>
+      <div class="forecast-grid">
+        <div><span>الإيراد المتوقع</span><strong>{{ forecast.projected_revenue }}</strong></div>
+        <div><span>المصروف المتوقع</span><strong>{{ forecast.projected_expenses }}</strong></div>
+        <div><span>الربح المتوقع</span><strong>{{ forecast.projected_profit }}</strong></div>
+        <div><span>هل سيصل للتعادل؟</span><strong>{{ "نعم" if forecast.will_reach_break_even else "لا" }}</strong></div>
+        <div><span>إيراد إضافي مطلوب</span><strong>{{ forecast.extra_revenue_needed }}</strong></div>
+        <div><span>عملاء إضافيون مطلوبون</span><strong>{{ forecast.extra_clients_needed }}</strong></div>
+      </div>
+      <p class="owner-recommendation">{{ forecast.recommendation }}</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h3 class="section-title">جدول الإيرادات</h3>
+    <div class="table-wrap"><table data-export-table>
+      <tr><th>رقم الفاتورة</th><th>اسم العميل</th><th>نوع الخدمة</th><th>المحامي</th><th>قيمة الخدمة</th><th>المدفوع</th><th>المتبقي</th><th>الاستحقاق</th><th>حالة التحصيل</th><th>مصدر العميل</th><th>تفاصيل</th></tr>
+      {% for row in report.revenues %}
+        <tr><td>{{ row.invoice_number }}</td><td>{{ row.client }}</td><td>{{ row.service_type }}</td><td>{{ row.lawyer }}</td><td>{{ row.total_amount }}</td><td>{{ row.paid_amount }}</td><td>{{ row.remaining }}</td><td>{{ row.due_date or "-" }}</td><td><span class="badge {% if row.collection_status == 'محصل' %}badge-green{% elif row.collection_status == 'متأخر' %}badge-red{% else %}badge-yellow{% endif %}">{{ row.collection_status }}</span></td><td>{{ row.client_source }}</td><td><a class="btn btn-secondary" href="{{ row.detail_url }}">عرض</a></td></tr>
+      {% else %}
+        <tr><td colspan="11">لا توجد بيانات إيرادات للفترة المختارة.</td></tr>
+      {% endfor %}
+    </table></div>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">جدول المصاريف</h3>
+    <div class="table-wrap"><table>
+      <tr><th>التاريخ</th><th>التصنيف</th><th>الوصف</th><th>المبلغ</th><th>النوع</th><th>طريقة الدفع</th><th>المسؤول</th><th>الإيصال</th></tr>
+      {% for row in report.expenses %}
+        <tr><td>{{ row.date }}</td><td>{{ row.category }}</td><td>{{ row.description }}</td><td>{{ row.amount }}</td><td>{{ row.kind }}</td><td>{{ row.method }}</td><td>{{ row.created_by }}</td><td>{% if row.attachment_url %}<a href="{{ row.attachment_url }}">عرض</a>{% else %}-{% endif %}</td></tr>
+      {% else %}
+        <tr><td colspan="8">لا توجد بيانات مصاريف للفترة المختارة.</td></tr>
+      {% endfor %}
+    </table></div>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">تحليل ربحية الخدمات القانونية</h3>
+    <div class="table-wrap"><table>
+      <tr><th>الخدمة</th><th>عدد الطلبات/القضايا</th><th>إجمالي الإيراد</th><th>متوسط الإيراد</th><th>التكلفة التقديرية</th><th>صافي الربح</th><th>هامش الربح</th><th>التقييم</th></tr>
+      {% for row in report.service_profitability %}
+        <tr><td>{{ row.service }}</td><td>{{ row.requests }}</td><td>{{ row.revenue }}</td><td>{{ row.average_revenue }}</td><td>{{ row.estimated_cost }}</td><td>{{ row.net_profit }}</td><td>{{ row.profit_margin }}%</td><td><span class="badge {% if row.rating == 'مربحة' %}badge-green{% elif row.rating == 'خاسرة' %}badge-red{% else %}badge-yellow{% endif %}">{{ row.rating }}</span></td></tr>
+      {% else %}
+        <tr><td colspan="8">لا توجد خدمات لتحليلها في الفترة المختارة.</td></tr>
+      {% endfor %}
+    </table></div>
+  </section>
+</div>
+
+<dialog class="owner-dialog" id="settingsDialog">
+  <form method="post" action="/owner-financial/settings">
+    <div class="dialog-head"><h3>إعدادات مالية للمالك</h3><button type="button" class="btn btn-secondary" data-close-dialog>إغلاق</button></div>
+    <div class="form-grid">
+      <div class="field"><label>المصاريف الثابتة الشهرية</label><input class="input" name="monthly_fixed_expenses" value="{{ settings.monthly_fixed_expenses }}"></div>
+      <div class="field"><label>هدف الإيراد الشهري</label><input class="input" name="monthly_revenue_target" value="{{ settings.monthly_revenue_target }}"></div>
+      <div class="field"><label>هدف الربح الشهري</label><input class="input" name="monthly_profit_target" value="{{ settings.monthly_profit_target }}"></div>
+      <div class="field"><label>هامش الربح الافتراضي %</label><input class="input" name="default_profit_margin" value="{{ settings.default_profit_margin }}"></div>
+      <div class="field"><label>حد تنبيه انخفاض التحصيل %</label><input class="input" name="collection_warning_threshold" value="{{ settings.collection_warning_threshold }}"></div>
+      <div class="field"><label>حد تنبيه ارتفاع المصاريف %</label><input class="input" name="expense_warning_threshold" value="{{ settings.expense_warning_threshold }}"></div>
+      <div class="field"><label>تصنيفات المصاريف</label><textarea name="expense_categories_json">{{ report.filter_options.expense_categories|join('\n') }}</textarea></div>
+      <div class="field"><label>تصنيفات الخدمات القانونية</label><textarea name="service_categories_json">{{ report.filter_options.service_types|join('\n') }}</textarea></div>
+    </div>
+    <div class="actions mt-4"><button class="btn btn-primary" type="submit">حفظ الإعدادات</button></div>
+  </form>
+</dialog>
+
+<dialog class="owner-dialog" id="monthlyReportDialog">
+  <div class="dialog-head"><h3>تقرير المالك الشهري</h3><button type="button" class="btn btn-secondary" data-close-dialog>إغلاق</button></div>
+  <div class="monthly-report">
+    <p><strong>ملخص الإيرادات:</strong> {{ report.monthly_report.revenue_summary }}</p>
+    <p><strong>ملخص المصاريف:</strong> {{ report.monthly_report.expense_summary }}</p>
+    <p><strong>صافي الربح/الخسارة:</strong> {{ report.monthly_report.net_profit }}</p>
+    <p><strong>حالة نقطة التعادل:</strong> {{ report.monthly_report.break_even_status }}</p>
+    <p><strong>أسباب الخسارة:</strong> {{ report.monthly_report.loss_reasons|join("، ") if report.monthly_report.loss_reasons else "لا توجد خسارة ظاهرة." }}</p>
+    <p><strong>أفضل مصادر الإيراد:</strong> {{ report.monthly_report.best_sources|join("، ") }}</p>
+    <p><strong>الخدمات الأعلى ربحاً:</strong> {{ report.monthly_report.top_services|join("، ") if report.monthly_report.top_services else "لا توجد بيانات." }}</p>
+    <p><strong>المتأخرات:</strong> {{ report.monthly_report.overdues }}</p>
+    <p><strong>توصيات:</strong> {{ report.monthly_report.recommendations|join(" ") }}</p>
+  </div>
+  <button class="btn btn-primary" type="button" onclick="window.print()">طباعة التقرير</button>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  window.ownerFinancialCharts = {{ report.charts|tojson }};
+</script>
+{% endblock %}

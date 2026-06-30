@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل مهمة' if task else 'مهمة متابعة جديدة' }}{% endblock %}
+{% block content %}
+<div class="section-head mb-4">
+  <div>
+    <p class="owner-eyebrow">مكتب سعيد الشبيبي للمحاماة</p>
+    <h2 class="page-title mb-0">{{ 'تعديل مهمة' if task else 'مهمة متابعة جديدة' }}</h2>
+  </div>
+  <a class="btn btn-secondary" href="/tasks">العودة للمهام</a>
+</div>
+<form class="panel form-grid" method="post">
+  <div class="field full"><label>عنوان المهمة</label><input class="input" name="title" required value="{{ task.title if task else '' }}"></div>
+  <div class="field"><label>نوع المهمة</label><select name="task_type">{% for key,val in task_types.items() %}<option value="{{ key }}" {% if task and task.task_type==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+  <div class="field"><label>الأولوية</label><select name="priority">{% for key,val in priorities.items() %}<option value="{{ key }}" {% if task and task.priority==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+  <div class="field"><label>تاريخ الاستحقاق</label><input class="input" type="date" name="due_date" value="{{ task.due_date if task and task.due_date else '' }}"></div>
+  <div class="field"><label>حالة المهمة</label><select name="task_status">{% for key,val in task_statuses.items() %}<option value="{{ key }}" {% if task and task.status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+  <div class="field"><label>الموظف المسؤول</label><select name="assigned_to_id"><option value="">غير محدد</option>{% for item in users %}<option value="{{ item.id }}" {% if task and task.assigned_to_id==item.id %}selected{% endif %}>{{ item.full_name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>الدور المرتبط بالمهمة</label><select name="assigned_role"><option value="">غير محدد</option>{% for key,val in role_labels.items() %}<option value="{{ key }}" {% if task and task.assigned_role==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+  <div class="field"><label>القضية أو المعاملة</label><select name="matter_id"><option value="">بدون</option>{% for matter in matters %}<option value="{{ matter.id }}" {% if (task and task.matter_id==matter.id) or (not task and prefill.matter_id|string==matter.id|string) %}selected{% endif %}>{{ matter.case_number }} · {{ matter.title }}</option>{% endfor %}</select></div>
+  <div class="field"><label>العميل</label><select name="client_id"><option value="">بدون</option>{% for client in clients %}<option value="{{ client.id }}" {% if (task and task.client_id==client.id) or (not task and prefill.client_id|string==client.id|string) %}selected{% endif %}>{{ client.full_name }}</option>{% endfor %}</select></div>
+  <div class="field"><label>الفاتورة</label><select name="invoice_id"><option value="">بدون</option>{% for invoice in invoices %}<option value="{{ invoice.id }}" {% if (task and task.invoice_id==invoice.id) or (not task and prefill.invoice_id|string==invoice.id|string) %}selected{% endif %}>{{ invoice.invoice_number }}</option>{% endfor %}</select></div>
+  <div class="field full"><label>وصف المهمة</label><textarea name="description">{{ task.description if task else '' }}</textarea></div>
+  <div class="field full"><label>ملاحظات</label><textarea name="notes">{{ task.notes if task else '' }}</textarea></div>
+  {% if task %}
+    <div class="field"><label>تاريخ الإنشاء</label><input class="input" value="{{ task.created_at }}" disabled></div>
+    <div class="field"><label>تاريخ الإكمال</label><input class="input" value="{{ task.completed_at or '-' }}" disabled></div>
+  {% endif %}
+  <div class="actions full"><button class="btn btn-primary" type="submit">حفظ</button><a class="btn btn-secondary" href="/tasks">إلغاء</a></div>
+</form>
+{% endblock %}

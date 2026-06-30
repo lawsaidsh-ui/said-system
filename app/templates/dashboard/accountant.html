@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}لوحة المحاسب{% endblock %}
+{% block content %}
+<div class="role-dashboard finance-page accountant-workspace">
+  <section class="finance-hero accountant-hero">
+    <div class="finance-hero-copy">
+      <p class="finance-eyebrow">لوحة المحاسب</p>
+      <h2 class="page-title">مكتب متابعة مالي يومي</h2>
+      <p class="finance-lead">إدارة الفواتير المفتوحة، التحصيل، المدفوعات، والمهام المالية من شاشة واحدة بتصنيف واضح يدعم مبادئ IFRS في التتبع والفصل بين الذمم والنقد.</p>
+      <div class="finance-hero-actions">
+        <a class="btn btn-primary" href="/invoices/new">فاتورة جديدة</a>
+        <a class="btn btn-secondary" href="/accounting/receipts">سند قبض</a>
+        <a class="btn btn-secondary" href="/accounting/payment-vouchers">سند صرف</a>
+        <a class="btn btn-secondary" href="/accounting">النظام المحاسبي</a>
+      </div>
+    </div>
+    <div class="finance-period-card">
+      <span>أولوية اليوم</span>
+      <strong>{{ stats.overdue_invoices }} فاتورة متأخرة</strong>
+      <small>ابدأ بالمتأخرات، ثم الفواتير غير المدفوعة، ثم مطابقة المدفوعات والمهام.</small>
+    </div>
+  </section>
+
+  <section class="finance-kpi-grid accountant-kpis" aria-label="مؤشرات المحاسب">
+    <article class="finance-kpi risk">
+      <span>فواتير غير مدفوعة</span>
+      <strong>{{ stats.unpaid_invoices }}</strong>
+      <small>ذمم مفتوحة تحتاج متابعة أو جدولة تحصيل.</small>
+    </article>
+    <article class="finance-kpi warning">
+      <span>فواتير متأخرة</span>
+      <strong>{{ stats.overdue_invoices }}</strong>
+      <small>أولوية تحصيل عالية حسب تاريخ الاستحقاق.</small>
+    </article>
+    <article class="finance-kpi revenue">
+      <span>مدفوعات الشهر</span>
+      <strong>{{ "%.2f"|format(stats.month_payments) }}</strong>
+      <small>مؤشر سيولة شهري من دفعات الفواتير.</small>
+    </article>
+    <article class="finance-kpi neutral">
+      <span>مهامي المالية</span>
+      <strong>{{ stats.my_pending_tasks }}</strong>
+      <small>مهام مفتوحة مرتبطة بالمحاسبة أو التحصيل.</small>
+    </article>
+    <article class="finance-kpi warning">
+      <span>قضايا بلا أتعاب</span>
+      <strong>{{ stats.missing_case_fees }}</strong>
+      <small>قضايا تحتاج إدخال بيانات الأتعاب قبل الفوترة.</small>
+    </article>
+  </section>
+
+  <section class="accountant-command-strip">
+    <a href="/accounting/overdue-clients">
+      <span>01</span>
+      <strong>متابعة التحصيل</strong>
+      <small>راجع المتأخرات وأرسل تذكيرات واتساب عند الحاجة.</small>
+    </a>
+    <a href="/accounting/journal">
+      <span>02</span>
+      <strong>مطابقة القيود</strong>
+      <small>سجل القيود اليومية حسب المدين والدائن.</small>
+    </a>
+    <a href="/accounting/reports">
+      <span>03</span>
+      <strong>تقرير الفترة</strong>
+      <small>اقرأ الإيرادات والمصروفات وصافي النتيجة.</small>
+    </a>
+    <a href="/accounting/missing-case-fees">
+      <span>04</span>
+      <strong>قضايا بلا أتعاب</strong>
+      <small>أكمل بيانات الأتعاب الناقصة للقضايا.</small>
+    </a>
+    <a href="/accounting/chart">
+      <span>05</span>
+      <strong>دليل الحسابات</strong>
+      <small>تأكد من تصنيف الحسابات قبل الإقفال.</small>
+    </a>
+  </section>
+
+  <div class="finance-layout accountant-main-grid">
+    <section class="finance-panel invoice-followup-panel">
+      <div class="section-head">
+        <div>
+          <p class="finance-eyebrow">الذمم المدينة</p>
+          <h3 class="section-title">الفواتير المطلوب متابعتها</h3>
+          <p class="muted">مرتبة حسب أقرب تاريخ استحقاق لرفع كفاءة التحصيل.</p>
+        </div>
+        <a class="btn btn-secondary" href="/invoices">كل الفواتير</a>
+      </div>
+      <div class="table-wrap">
+        <table class="finance-table accountant-table">
+          <thead>
+            <tr><th>الفاتورة</th><th>العميل</th><th>الاستحقاق</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الإجراء</th></tr>
+          </thead>
+          <tbody>
+          {% for invoice in unpaid_invoices %}
+            {% set remaining = invoice.total_amount - invoice.paid_amount %}
+            <tr>
+              <td data-label="الفاتورة"><strong>{{ invoice.invoice_number }}</strong></td>
+              <td data-label="العميل">{{ invoice.client.full_name if invoice.client else '-' }}</td>
+              <td data-label="الاستحقاق">{{ invoice.due_date or '-' }}</td>
+              <td data-label="الإجمالي">{{ invoice.total_amount }}</td>
+              <td data-label="المدفوع">{{ invoice.paid_amount }}</td>
+              <td data-label="المتبقي"><strong>{{ remaining }}</strong></td>
+              <td data-label="الحالة"><span class="badge {{ badge_class(invoice.status) }}">{{ invoice_statuses.get(invoice.status, invoice.status) }}</span></td>
+              <td data-label="الإجراء"><a class="btn btn-secondary" href="/invoices/{{ invoice.id }}">عرض</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="8">لا توجد فواتير للمتابعة.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="finance-panel accountant-review-panel">
+      <p class="finance-eyebrow">مراجعة سريعة</p>
+      <h3 class="section-title">ضوابط قبل الإقفال</h3>
+      <div class="finance-checklist">
+        <a href="/accounting/receipts"><span></span><strong>مطابقة المقبوضات</strong><small>كل دفعة مرتبطة بفاتورة أو عميل.</small></a>
+        <a href="/accounting/payment-vouchers"><span></span><strong>اعتماد المصروفات</strong><small>كل صرف له تصنيف ومرفق عند الحاجة.</small></a>
+        <a href="/accounting/installments"><span></span><strong>متابعة الأقساط</strong><small>الأقساط المفتوحة لا تبقى خارج الذمم.</small></a>
+        <a href="/accounting/missing-case-fees"><span></span><strong>إدخال أتعاب القضايا</strong><small>راجع القضايا التي لا تحتوي على بيانات أتعاب.</small></a>
+        <a href="/tasks/new"><span></span><strong>إنشاء مهمة متابعة</strong><small>حوّل أي نقص مستندي إلى مهمة واضحة.</small></a>
+      </div>
+    </aside>
+  </div>
+
+  <div class="finance-two-column">
+    <section class="finance-panel">
+      <div class="section-head compact">
+        <div>
+          <p class="finance-eyebrow">السيولة</p>
+          <h3 class="section-title">آخر المدفوعات</h3>
+        </div>
+        <a class="btn btn-secondary" href="/payments">كل المدفوعات</a>
+      </div>
+      <div class="table-wrap">
+        <table class="finance-table">
+          <thead><tr><th>التاريخ</th><th>العميل</th><th>الفاتورة</th><th>المبلغ</th><th>الطريقة</th></tr></thead>
+          <tbody>
+          {% for payment in recent_payments %}
+            <tr>
+              <td data-label="التاريخ">{{ payment.payment_date }}</td>
+              <td data-label="العميل">{{ payment.invoice.client.full_name if payment.invoice and payment.invoice.client else '-' }}</td>
+              <td data-label="الفاتورة">{{ payment.invoice.invoice_number if payment.invoice else '-' }}</td>
+              <td data-label="المبلغ"><strong>{{ payment.amount }}</strong></td>
+              <td data-label="الطريقة">{{ payment_methods.get(payment.method, payment.method) }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5">لا توجد مدفوعات.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="finance-panel finance-tasks-panel">
+      <div class="section-head compact">
+        <div>
+          <p class="finance-eyebrow">المهام</p>
+          <h3 class="section-title">مهامي المالية</h3>
+        </div>
+        <a class="btn btn-secondary" href="/tasks">كل المهام</a>
+      </div>
+      {% set tasks = my_tasks %}
+      {% include "partials/task_table.html" with context %}
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta with context %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">مقال قانوني</p>
+    <h1>{{ article.title }}</h1>
+    <p>{{ article.meta_description }}</p>
+  </div>
+</section>
+<section class="public-section">
+  <div class="public-container content-layout">
+    <article class="prose-box">
+      <div class="direct-answer">
+        <strong>الإجابة المختصرة:</strong>
+        <p>{{ article.direct_answer }}</p>
+      </div>
+      {% for heading, points in article.sections %}
+      <h2>{{ heading }}</h2>
+      <ul class="checked-list">
+        {% for point in points %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endfor %}
+      <h2>أسئلة شائعة</h2>
+      <div class="faq-list article-faq">
+        {% for question, answer in article.faqs %}
+        <details>
+          <summary>{{ question }}</summary>
+          <p>{{ answer }}</p>
+        </details>
+        {% endfor %}
+      </div>
+      <div class="legal-note">
+        <strong>تنبيه قانوني:</strong> هذه المعلومات عامة ومبسطة، ولا تغني عن استشارة قانونية متخصصة تراعي تفاصيل حالتك ومستنداتك.
+      </div>
+    </article>
+    <aside class="side-box">
+      <h2>المكتب</h2>
+      <p>{{ office_name }} يقدم استشارات وخدمات قانونية في {{ service_area }} للأفراد والشركات.</p>
+      <a class="public-btn primary full-width" href="{{ whatsapp_url }}">اسأل عن حالتك</a>
+    </aside>
+  </div>
+</section>
+<div class="public-container">{{ cta() }}</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ consultation.subject }}{% endblock %}
+{% block content %}
+<h2 class="page-title">{{ consultation.subject }}</h2>
+<section class="panel grid-3">
+  <p><strong>طالب الاستشارة:</strong> {{ consultation.requester_name }}</p><p><strong>الهاتف:</strong> {{ consultation.requester_phone }}</p><p><strong>البريد:</strong> {{ consultation.requester_email or '-' }}</p>
+  <p><strong>العميل:</strong> {{ consultation.client.full_name if consultation.client else '-' }}</p><p><strong>المحامي:</strong> {{ consultation.assigned_lawyer.full_name if consultation.assigned_lawyer else '-' }}</p><p><strong>الحالة:</strong> <span class="badge {{ badge_class(consultation.status) }}">{{ consultation_statuses.get(consultation.status, consultation.status) }}</span></p>
+  <p class="full"><strong>الوصف:</strong> {{ consultation.description or '-' }}</p>
+  <p class="full"><strong>ملاحظات:</strong> {{ consultation.notes or '-' }}</p>
+</section>
+{% endblock %}

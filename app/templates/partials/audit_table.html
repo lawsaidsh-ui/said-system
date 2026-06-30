@@ -1,0 +1,26 @@
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>الإجراء</th>
+        <th>النوع</th>
+        <th>الرقم</th>
+        <th>قام به</th>
+        <th>الوقت</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in audit_logs %}
+      <tr>
+        <td data-label="الإجراء">{{ audit_action_label(log.action) }}</td>
+        <td data-label="النوع">{{ audit_entity_label(log.entity_type) }}</td>
+        <td data-label="الرقم">{{ log.entity_id or '-' }}</td>
+        <td data-label="قام به">{{ log.user.full_name if log.user else 'النظام' }}</td>
+        <td data-label="الوقت">{{ log.created_at }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">لا توجد أنشطة مسجلة.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

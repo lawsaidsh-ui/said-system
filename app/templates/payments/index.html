@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}المدفوعات{% endblock %}
+{% block content %}
+<div class="payments-page">
+<h2 class="page-title">المدفوعات وكشف حساب العميل</h2>
+{% if user.role in ["admin", "accountant"] %}
+  {% include "accounting/nav.html" %}
+{% endif %}
+<section class="panel payments-filter-panel">
+  <form class="filters" method="get">
+    <div class="field"><label>العميل</label><select name="client_id"><option value="">كل العملاء</option>{% for client in clients %}<option value="{{ client.id }}" {% if client_id|string==client.id|string %}selected{% endif %}>{{ client.full_name }}</option>{% endfor %}</select></div>
+    <button class="btn btn-primary" type="submit">عرض</button>
+  </form>
+</section>
+<section class="panel payments-list-panel">
+  <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>حالة التاريخ</th><th>العميل</th><th>النوع</th><th>المستند</th><th>المبلغ</th><th>الطريقة</th><th>المرجع</th><th>الإجراء</th></tr></thead><tbody>
+  {% for row in payment_rows %}
+    <tr class="date-status-{{ row.date_status or 'confirmed' }}">
+      <td data-label="التاريخ">{{ row.date }}</td>
+      <td data-label="حالة التاريخ"><span class="badge {{ date_status_badge(row.date_status) }}">{{ date_status_options.get(row.date_status or 'confirmed', row.date_status or 'confirmed') }}</span>{% if row.date_note %}<small>{{ row.date_note }}</small>{% endif %}</td>
+      <td data-label="العميل">{{ row.client }}</td>
+      <td data-label="النوع">{{ row.source_type }}</td>
+      <td data-label="المستند">{% if row.source_url %}<a href="{{ row.source_url }}">{{ row.source_number }}</a>{% else %}{{ row.source_number }}{% endif %}</td>
+      <td data-label="المبلغ">{{ row.amount }}</td>
+      <td data-label="الطريقة">{{ payment_methods.get(row.method, row.method) }}</td>
+      <td data-label="المرجع">{{ row.reference_no or '-' }}</td>
+      <td data-label="الإجراء">
+        {% if row.action_type == "whatsapp" %}
+          <button class="btn btn-secondary" type="button" data-whatsapp-source-type="payment" data-whatsapp-source-id="{{ row.action_id }}">إرسال واتساب</button>
+        {% elif row.action_type == "print" %}
+          <a class="btn btn-secondary" href="/accounting/receipts/{{ row.action_id }}/print">طباعة السند</a>
+        {% else %}
+          -
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="9">لا توجد مدفوعات.</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+</section>
+</div>
+{% endblock %}

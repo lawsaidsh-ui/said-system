@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}سجل التدقيق{% endblock %}
+{% block content %}
+<div class="section-head mb-4">
+  <div>
+    <h2 class="page-title mb-0">سجل التدقيق</h2>
+    <p class="muted">يعرض آخر العمليات داخل النظام ومن قام بها.</p>
+  </div>
+</div>
+<section class="panel">
+  {% include "partials/audit_table.html" %}
+</section>
+{% endblock %}

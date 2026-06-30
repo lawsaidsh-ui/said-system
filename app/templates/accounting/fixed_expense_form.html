@@ -1,0 +1,49 @@
+{% set is_edit = item is defined and item %}
+<form method="post" action="{% if is_edit %}/accounting/fixed-expenses/{{ item.id }}/update{% else %}/accounting/fixed-expenses{% endif %}">
+  <div class="form-grid">
+    <div class="field">
+      <label>اسم المصروف</label>
+      <input class="input" name="title" required value="{{ item.title if is_edit else '' }}">
+    </div>
+    <div class="field">
+      <label>التصنيف</label>
+      <select name="category" required>
+        {% for category in categories %}
+          <option value="{{ category }}" {% if is_edit and item.category == category %}selected{% endif %}>{{ category }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>المبلغ الشهري</label>
+      <input class="input" type="number" step="0.01" min="0" name="amount" required value="{{ item.amount if is_edit else '' }}">
+    </div>
+    <div class="field">
+      <label>يوم الاستحقاق</label>
+      <input class="input" type="number" min="1" max="31" name="due_day" required value="{{ item.due_day if is_edit else '1' }}">
+    </div>
+    <div class="field">
+      <label>طريقة الدفع</label>
+      <select name="payment_method">
+        {% for key, label in payment_methods.items() %}
+          <option value="{{ key }}" {% if is_edit and item.payment_method == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>المورد أو الجهة</label>
+      <input class="input" name="vendor_name" value="{{ item.vendor_name if is_edit and item.vendor_name else '' }}">
+    </div>
+    <div class="field full">
+      <label>ملاحظات</label>
+      <textarea name="notes" rows="3">{{ item.notes if is_edit and item.notes else '' }}</textarea>
+    </div>
+    <label class="check-field full">
+      <input type="checkbox" name="is_active" value="1" {% if not is_edit or item.is_active %}checked{% endif %}>
+      <span>مصروف نشط</span>
+    </label>
+  </div>
+  <div class="actions mt-4">
+    <button class="btn btn-primary" type="submit">{{ "حفظ التعديل" if is_edit else "إضافة المصروف" }}</button>
+    <button class="btn btn-secondary" type="button" data-close-dialog>إلغاء</button>
+  </div>
+</form>

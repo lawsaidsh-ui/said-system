@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}قضايا بدون أتعاب{% endblock %}
+{% block content %}
+<div class="finance-page missing-case-fees-page">
+  <section class="finance-hero">
+    <div class="finance-hero-copy">
+      <p class="finance-eyebrow">مراجعة أتعاب القضايا</p>
+      <h2 class="page-title">قضايا لم يتم إدخال بيانات الأتعاب لها</h2>
+      <p class="finance-lead">هذه القائمة تعرض كل قضية لا يوجد لها سجل أتعاب غير ملغى. استخدمها كقائمة عمل للمحاسب قبل إصدار الفواتير أو متابعة التحصيل.</p>
+      <div class="finance-hero-actions">
+        <a class="btn btn-primary" href="/accounting/case-fees">إضافة أتعاب مباشرة</a>
+        <a class="btn btn-secondary" href="/accounting">لوحة المحاسبة</a>
+      </div>
+    </div>
+    <div class="finance-period-card">
+      <span>إجمالي النواقص</span>
+      <strong>{{ total_missing }}</strong>
+      <small>المعروض حسب الفلتر الحالي: {{ filtered_count }}</small>
+    </div>
+  </section>
+
+  {% include "accounting/nav.html" %}
+
+  <section class="finance-panel">
+    <form class="filters" method="get">
+      <div class="field">
+        <label>بحث</label>
+        <input class="input" name="q" value="{{ filters.q }}" placeholder="اسم العميل أو رقم الدعوى أو عنوان القضية">
+      </div>
+      <div class="field">
+        <label>الحالة</label>
+        <select name="status">
+          <option value="">كل الحالات</option>
+          {% for key, val in case_statuses.items() %}
+            <option value="{{ key }}" {% if filters.status == key %}selected{% endif %}>{{ val }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+      <a class="btn btn-secondary" href="/accounting/missing-case-fees/export.xls?q={{ filters.q|urlencode }}&status={{ filters.status|urlencode }}">تصدير Excel</a>
+      <a class="btn btn-secondary" href="/accounting/missing-case-fees">مسح</a>
+    </form>
+  </section>
+
+  <section class="finance-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">قائمة العمل</p>
+        <h3 class="section-title">القضايا الناقصة</h3>
+        <p class="muted">اضغط إدخال الأتعاب لفتح نموذج الأتعاب والقضية محددة مسبقًا.</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="finance-table">
+        <thead>
+          <tr>
+            <th>رقم المكتب</th>
+            <th>رقم الدعوى</th>
+            <th>القضية</th>
+            <th>العميل</th>
+            <th>المحكمة</th>
+            <th>الحالة</th>
+            <th>تاريخ الفتح</th>
+            <th>الإجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for matter in matters %}
+          <tr>
+            <td data-label="رقم المكتب"><strong>{{ matter.case_number }}</strong></td>
+            <td data-label="رقم الدعوى">{{ matter.ministry_case_number or '-' }}</td>
+            <td data-label="القضية">{{ matter.title }}</td>
+            <td data-label="العميل">{{ matter.client.full_name if matter.client else '-' }}</td>
+            <td data-label="المحكمة">{{ matter.court_name or '-' }}</td>
+            <td data-label="الحالة"><span class="badge {{ badge_class(matter.status) }}">{{ case_statuses.get(matter.status, matter.status) }}</span></td>
+            <td data-label="تاريخ الفتح">{{ matter.opened_at or '-' }}</td>
+            <td class="actions" data-label="الإجراء">
+              <a class="btn btn-primary" href="/accounting/case-fees?matter_id={{ matter.id }}">إدخال الأتعاب</a>
+              <a class="btn btn-secondary" href="/matters/{{ matter.id }}">عرض</a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8">لا توجد قضايا ناقصة حسب الفلتر الحالي.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

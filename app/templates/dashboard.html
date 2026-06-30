@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}لوحة التحكم{% endblock %}
+{% block content %}
+<h2 class="page-title">لوحة التحكم</h2>
+<div class="stats-grid">
+  <div class="stat-card"><span>إجمالي العملاء</span><strong>{{ stats.clients }}</strong></div>
+  <div class="stat-card"><span>القضايا المفتوحة</span><strong>{{ stats.open_matters }}</strong></div>
+  <div class="stat-card"><span>جلسات هذا الأسبوع</span><strong>{{ stats.week_sessions }}</strong></div>
+  <div class="stat-card"><span>المهام المتأخرة</span><strong>{{ stats.overdue_tasks }}</strong></div>
+  <div class="stat-card"><span>الفواتير غير المدفوعة</span><strong>{{ stats.unpaid_invoices }}</strong></div>
+  <div class="stat-card"><span>المدفوعات هذا الشهر</span><strong>{{ "%.2f"|format(stats.month_payments) }}</strong></div>
+</div>
+<div class="grid-2">
+  <section class="panel"><h3 class="section-title">آخر 5 عملاء</h3>{% include "partials/client_table.html" with context %}</section>
+  <section class="panel"><h3 class="section-title">آخر 5 قضايا</h3>{% set matters = recent_matters %}{% include "partials/matter_table.html" with context %}</section>
+  <section class="panel"><h3 class="section-title">جلسات قادمة</h3>{% set sessions = upcoming_sessions %}{% include "partials/session_table.html" with context %}</section>
+  <section class="panel"><h3 class="section-title">مهامي اليوم</h3>{% set tasks = today_tasks %}{% include "partials/task_table.html" with context %}</section>
+</div>
+{% if user.role == "admin" %}
+  <section class="panel">
+    <div class="section-head">
+      <h3 class="section-title">آخر الأنشطة</h3>
+      <a class="text-link" href="/audit">سجل التدقيق الكامل</a>
+    </div>
+    {% include "partials/audit_table.html" %}
+  </section>
+{% endif %}
+{% endblock %}

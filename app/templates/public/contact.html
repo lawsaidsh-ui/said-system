@@ -1,0 +1,63 @@
+{% extends "public/base.html" %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">تواصل معنا</p>
+    <h1>ابدأ برسالة قصيرة... وسنساعدك على ترتيب الخطوة التالية</h1>
+    <p>لا تحتاج إلى شرح قانوني كامل من البداية. أخبرنا بما وصلك أو ما يقلقك، وسنتعامل مع طلبك بسرية وهدوء.</p>
+  </div>
+</section>
+
+<section class="public-section">
+  <div class="public-container split-grid">
+    <article class="prose-box contact-intake">
+      <h2>أرسل طلبك الأولي</h2>
+      <p>النموذج مختصر حتى لا نثقل عليك. بعد الإرسال سيفتح واتساب برسالة مرتبة يمكنك مراجعتها قبل إرسالها.</p>
+      <form class="form-grid public-intake-form" method="post" action="/contact">
+        <div class="field">
+          <label>الاسم</label>
+          <input class="input" name="name" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label>رقم الهاتف</label>
+          <input class="input" name="phone" autocomplete="tel" required>
+        </div>
+        <div class="field full">
+          <label>نوع الطلب</label>
+          <select name="request_type" required>
+            <option value="">اختر نوع الطلب</option>
+            <option>استشارة قانونية</option>
+            <option>إنذار أو مطالبة</option>
+            <option>قضية قائمة</option>
+            <option>مراجعة عقد</option>
+            <option>طلب آخر</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>وصف مختصر</label>
+          <textarea name="message" placeholder="اكتب ملخصًا بسيطًا: ماذا حدث؟ هل توجد مواعيد قريبة؟ ما الذي تحتاج فهمه؟" required></textarea>
+        </div>
+        <div class="actions full">
+          <button class="public-btn primary" type="submit">إرسال الطلب</button>
+          <a class="public-btn secondary" href="{{ whatsapp_url }}">واتساب مباشر</a>
+        </div>
+        <p class="privacy-note full">كل ما ترسله يبقى سريًا ويُستخدم فقط لفهم طلبك.</p>
+      </form>
+    </article>
+    <aside class="public-card emphasis contact-comfort">
+      <h2>طرق التواصل المباشر</h2>
+      <p>اختر الطريقة الأنسب لك. إذا كان لديك موعد قريب أو مستند مهم، اذكر ذلك في بداية الرسالة.</p>
+      <div class="contact-actions">
+        <a class="public-btn primary" href="{{ whatsapp_url }}">تحدث عبر واتساب</a>
+        <a class="public-btn secondary" href="tel:{{ phone_tel }}">اتصال مباشر: {{ phone_display }}</a>
+        <a class="public-btn secondary" href="mailto:{{ contact_email }}">البريد الإلكتروني</a>
+      </div>
+      <ul class="checked-list">
+        <li>نستمع أولًا ثم نطلب ما يلزم من مستندات.</li>
+        <li>لا تتخذ قرارًا سريعًا قبل فهم أثره القانوني.</li>
+        <li>المعلومات الأولية تساعدنا على توجيهك للخطوة المناسبة.</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+{% endblock %}

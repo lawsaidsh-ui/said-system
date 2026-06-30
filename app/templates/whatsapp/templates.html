@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}قوالب واتساب{% endblock %}
+{% block content %}
+<div class="whatsapp-settings-page">
+  <div class="page-head">
+    <div>
+      <p class="owner-eyebrow">الربط اليدوي مع واتساب</p>
+      <h2 class="page-title mb-0">قوالب رسائل واتساب</h2>
+    </div>
+  </div>
+
+  <section class="panel">
+    <h3 class="section-title">إضافة قالب جديد</h3>
+    <form class="form-grid" method="post" action="/whatsapp/templates">
+      <div class="field">
+        <label>اسم القالب</label>
+        <input class="input" name="name" required>
+      </div>
+      <div class="field">
+        <label>نوع القالب</label>
+        <select name="template_type">
+          {% for key, label in template_types.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field full">
+        <label>نص القالب</label>
+        <textarea name="body" rows="5" required></textarea>
+      </div>
+      <div class="actions full">
+        <button class="btn btn-primary" type="submit">إضافة قالب</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">المتغيرات الجاهزة</h3>
+    <div class="whatsapp-vars">
+      {% for variable in variables %}
+        <span>{{ "{" ~ variable ~ "}" }}</span>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 class="section-title">القوالب الحالية</h3>
+    <div class="whatsapp-template-list">
+      {% for item in templates %}
+        <article class="whatsapp-template-card">
+          <form class="form-grid" method="post" action="/whatsapp/templates/{{ item.id }}/update">
+            <div class="field">
+              <label>اسم القالب</label>
+              <input class="input" name="name" value="{{ item.name }}" required>
+            </div>
+            <div class="field">
+              <label>نوع القالب</label>
+              <select name="template_type">
+                {% for key, label in template_types.items() %}
+                  <option value="{{ key }}" {% if item.template_type == key %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field full">
+              <label>نص القالب</label>
+              <textarea name="body" rows="5" required>{{ item.body }}</textarea>
+            </div>
+            <div class="actions full">
+              <button class="btn btn-primary" type="submit">حفظ التعديل</button>
+              <button class="btn btn-secondary" type="submit" formaction="/whatsapp/templates/{{ item.id }}/toggle">
+                {{ 'تعطيل القالب' if item.is_active else 'تفعيل القالب' }}
+              </button>
+              <span class="badge {{ 'badge-green' if item.is_active else 'badge-yellow' }}">{{ 'فعال' if item.is_active else 'معطل' }}</span>
+            </div>
+          </form>
+        </article>
+      {% else %}
+        <p class="muted">لا توجد قوالب واتساب.</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

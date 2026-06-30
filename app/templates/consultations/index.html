@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}الاستشارات{% endblock %}
+{% block content %}
+<div class="consultations-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">الاستشارات</h2>
+    <a class="btn btn-primary" href="/consultations/new">استشارة جديدة</a>
+  </div>
+
+  <section class="panel consultations-filter-panel">
+    <form class="filters" method="get">
+      <div class="field"><label>الحالة</label><select name="status"><option value="">الكل</option>{% for key,val in consultation_statuses.items() %}<option value="{{ key }}" {% if status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+    </form>
+  </section>
+
+  <section class="panel consultations-list-panel">
+    <div class="table-wrap"><table><thead><tr><th>الموضوع</th><th>طالب الاستشارة</th><th>الهاتف</th><th>المحامي</th><th>الحالة</th><th></th></tr></thead><tbody>
+    {% for item in consultations %}<tr><td data-label="الموضوع">{{ item.subject }}</td><td data-label="طالب الاستشارة">{{ item.requester_name }}</td><td data-label="الهاتف">{{ item.requester_phone }}</td><td data-label="المحامي">{{ item.assigned_lawyer.full_name if item.assigned_lawyer else '-' }}</td><td data-label="الحالة"><span class="badge {{ badge_class(item.status) }}">{{ consultation_statuses.get(item.status, item.status) }}</span></td><td data-label="الإجراء"><a class="btn btn-secondary" href="/consultations/{{ item.id }}">عرض</a></td></tr>{% else %}<tr><td colspan="6">لا توجد استشارات.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

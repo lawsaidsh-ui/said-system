@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}النظام المحاسبي IFRS{% endblock %}
+{% block content %}
+<div class="finance-page accounting-dashboard-page">
+  <section class="finance-hero">
+    <div class="finance-hero-copy">
+      <p class="finance-eyebrow">النظام المحاسبي</p>
+      <h2 class="page-title">مركز مالي متكامل متوافق مع IFRS</h2>
+      <p class="finance-lead">عرض تشغيلي مبني على أساس الاستحقاق، يربط الإيرادات المقبوضة والمصروفات والذمم المدينة والتكاليف الثابتة في لوحة واحدة قابلة للمراجعة.</p>
+      <div class="finance-hero-actions">
+        <a class="btn btn-primary" href="/accounting/journal">تسجيل قيد يومي</a>
+        <a class="btn btn-secondary" href="/accounting/missing-case-fees">قضايا بلا أتعاب</a>
+        <a class="btn btn-secondary" href="/accounting/reports">إصدار تقرير مالي</a>
+        <a class="btn btn-secondary" href="/accounting/chart">دليل الحسابات</a>
+      </div>
+    </div>
+    <div class="finance-period-card" aria-label="ملخص الفترة">
+      <span>الفترة الحالية</span>
+      <strong>من بداية الشهر حتى اليوم</strong>
+      <small>الإيرادات المعروضة تمثل المقبوضات وسندات القبض، مع فصل المصروفات التشغيلية وسندات الصرف.</small>
+    </div>
+  </section>
+
+  {% if user.role != "accountant" %}
+    {% include "accounting/nav.html" %}
+  {% endif %}
+
+  <section class="finance-kpi-grid" aria-label="المؤشرات المالية">
+    <article class="finance-kpi revenue">
+      <span>الإيرادات المقبوضة</span>
+      <strong>{{ summary.revenue }}</strong>
+      <small>IFRS: تحقق الإيراد بعد وجود مستند قبض أو دفعة مرتبطة.</small>
+    </article>
+    <article class="finance-kpi expense">
+      <span>المصروفات المعترف بها</span>
+      <strong>{{ summary.expenses }}</strong>
+      <small>تشمل المصروفات وسندات الصرف خلال الفترة، وتدار الرواتب من المصاريف الثابتة.</small>
+    </article>
+    <article class="finance-kpi profit">
+      <span>صافي نتيجة الفترة</span>
+      <strong>{{ summary.net_profit }}</strong>
+      <small>الفارق بين الإيرادات المقبوضة والمصروفات المعترف بها.</small>
+    </article>
+    <article class="finance-kpi risk">
+      <span>الذمم غير المحصلة</span>
+      <strong>{{ summary.outstanding }}</strong>
+      <small>رصيد فواتير مستحق أو مرسل أو مدفوع جزئياً.</small>
+    </article>
+    <article class="finance-kpi warning">
+      <span>فواتير متأخرة</span>
+      <strong>{{ summary.overdue_invoices }}</strong>
+      <small>بنود تجاوزت تاريخ الاستحقاق وتحتاج متابعة تحصيل.</small>
+    </article>
+    <article class="finance-kpi neutral">
+      <span>دفعات اليوم</span>
+      <strong>{{ summary.today_payments }}</strong>
+      <small>مؤشر سيولة يومي لمتابعة الصندوق والبنك.</small>
+    </article>
+    <article class="finance-kpi warning">
+      <span>قضايا بلا أتعاب</span>
+      <strong>{{ missing_case_fees_count }}</strong>
+      <small>قضايا تحتاج إدخال بيانات الأتعاب قبل الفوترة أو التحصيل.</small>
+    </article>
+  </section>
+
+  <section class="ifrs-strip" aria-label="ضوابط IFRS">
+    <div class="ifrs-item">
+      <span>01</span>
+      <strong>أساس الاستحقاق</strong>
+      <small>الفواتير والذمم تعرض منفصلة عن المقبوضات النقدية.</small>
+    </div>
+    <div class="ifrs-item">
+      <span>02</span>
+      <strong>قابلية التتبع</strong>
+      <small>كل سند وقيد ورقم فاتورة قابل للرجوع من شاشة التشغيل.</small>
+    </div>
+    <div class="ifrs-item">
+      <span>03</span>
+      <strong>فصل التصنيفات</strong>
+      <small>إيرادات، مصروفات، أصول، والتزامات ضمن دليل الحسابات.</small>
+    </div>
+    <div class="ifrs-item">
+      <span>04</span>
+      <strong>الاستمرارية</strong>
+      <small>نقطة التعادل والتكاليف الثابتة تدعم تقييم قدرة التشغيل.</small>
+    </div>
+  </section>
+
+  <div class="finance-layout">
+    <section class="finance-panel collection-panel">
+      <div class="section-head">
+        <div>
+          <p class="finance-eyebrow">التحصيل والذمم</p>
+          <h3 class="section-title">العملاء المتعثرون مالياً</h3>
+          <p class="muted">الفواتير والأقساط التي تجاوزت تاريخ الاستحقاق ولم تسدد بالكامل.</p>
+        </div>
+        <a class="btn btn-primary" href="/accounting/overdue-clients">فتح ملف التحصيل</a>
+      </div>
+      <div class="finance-mini-grid">
+        <div><span>عملاء متعثرون</span><strong>{{ overdue_report.summary.overdue_clients_count }}</strong></div>
+        <div><span>إجمالي المتأخر</span><strong>{{ overdue_report.summary.total_overdue_balance }}</strong></div>
+        <div><span>بنود متأخرة</span><strong>{{ overdue_report.summary.overdue_items_count }}</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table class="finance-table">
+          <thead>
+            <tr><th>العميل</th><th>المستند</th><th>المتبقي</th><th>الاستحقاق</th><th>التأخير</th><th>الحالة</th><th>الإجراء</th></tr>
+          </thead>
+          <tbody>
+          {% for row in overdue_report.rows[:5] %}
+            <tr>
+              <td data-label="العميل"><strong>{{ row.client_name }}</strong><small>{{ row.matter_name }}</small></td>
+              <td data-label="المستند">{{ row.number }}</td>
+              <td data-label="المتبقي">{{ row.balance }}</td>
+              <td data-label="الاستحقاق">{{ row.due_date }}</td>
+              <td data-label="التأخير">{{ row.days_overdue }} يوم</td>
+              <td data-label="الحالة"><span class="badge {{ row.risk_badge }}">{{ row.risk_label }}</span></td>
+              <td data-label="الإجراء"><a class="btn btn-secondary" href="/accounting/overdue-clients">متابعة</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="7">لا توجد مبالغ متأخرة حالياً.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="finance-panel finance-control-panel">
+      <p class="finance-eyebrow">إغلاق الشهر</p>
+      <h3 class="section-title">قائمة مراجعة IFRS</h3>
+      <div class="finance-checklist">
+        <a href="/accounting/chart"><span></span><strong>مراجعة دليل الحسابات</strong><small>تصنيف الحسابات قبل اعتماد القيود.</small></a>
+        <a href="/accounting/journal"><span></span><strong>تسوية القيود اليومية</strong><small>مطابقة المدين والدائن وربط المستندات.</small></a>
+        <a href="/accounting/receipts"><span></span><strong>مطابقة سندات القبض</strong><small>تأكيد المقبوضات مقابل الفواتير والذمم.</small></a>
+        <a href="/accounting/payment-vouchers"><span></span><strong>اعتماد سندات الصرف</strong><small>تثبيت المصروفات مع المرفقات والاعتمادات.</small></a>
+      </div>
+    </aside>
+  </div>
+
+  <section class="finance-panel fixed-cost-panel">
+    <div class="section-head">
+      <div>
+        <p class="finance-eyebrow">التكاليف الثابتة والاستمرارية</p>
+        <h3 class="section-title">المصاريف الشهرية الثابتة</h3>
+        <p class="muted">مؤشرات الالتزامات المتكررة ونقطة التعادل الشهرية.</p>
+      </div>
+      <a class="btn btn-primary" href="/accounting/fixed-expenses">إدارة التكاليف الثابتة</a>
+    </div>
+    <div class="finance-metric-row">
+      <div class="finance-metric revenue"><span>إيرادات الشهر</span><strong>{{ fixed_expense_summary.monthly_revenue }}</strong></div>
+      <div class="finance-metric expense"><span>تكاليف ثابتة</span><strong>{{ fixed_expense_summary.monthly_total }}</strong><small>منها رواتب: {{ fixed_expense_summary.salary_total }}</small></div>
+      <div class="finance-metric profit"><span>صافي تقديري</span><strong>{{ fixed_expense_summary.estimated_net_profit }}</strong></div>
+      <div class="finance-metric warning"><span>نقطة التعادل</span><strong>{{ fixed_expense_summary.break_even_monthly }}</strong></div>
+      <div class="finance-metric neutral"><span>احتياج يومي</span><strong>{{ fixed_expense_summary.daily_needed }}</strong></div>
+    </div>
+  </section>
+
+  <section class="finance-alerts">
+    <div>
+      <p class="finance-eyebrow">تنبيهات الرقابة</p>
+      <h3 class="section-title">تنبيهات مالية مهمة</h3>
+    </div>
+    <div class="finance-alert-list">
+      {% for alert in alerts %}
+        <p class="finance-alert warning">{{ alert }}</p>
+      {% else %}
+        <p class="finance-alert success">لا توجد تنبيهات مالية حالياً.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="finance-two-column">
+    <section class="finance-panel">
+      <div class="section-head compact">
+        <div>
+          <p class="finance-eyebrow">حركة نقدية داخلة</p>
+          <h3 class="section-title">آخر سندات القبض</h3>
+        </div>
+        <a class="btn btn-secondary" href="/accounting/receipts">كل السندات</a>
+      </div>
+      <div class="table-wrap">
+        <table class="finance-table">
+          <thead><tr><th>الرقم</th><th>العميل</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+          <tbody>
+          {% for r in recent_receipts %}
+            <tr><td data-label="الرقم">{{ r.receipt_number }}</td><td data-label="العميل">{{ r.client.full_name if r.client else '-' }}</td><td data-label="المبلغ">{{ r.amount }}</td><td data-label="التاريخ">{{ r.received_at }}</td></tr>
+          {% else %}
+            <tr><td colspan="4">لا توجد بيانات.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="finance-panel">
+      <div class="section-head compact">
+        <div>
+          <p class="finance-eyebrow">حركة نقدية خارجة</p>
+          <h3 class="section-title">آخر المصروفات</h3>
+        </div>
+        <a class="btn btn-secondary" href="/accounting/expenses">كل المصروفات</a>
+      </div>
+      <div class="table-wrap">
+        <table class="finance-table">
+          <thead><tr><th>التصنيف</th><th>المبلغ</th><th>التاريخ</th></tr></thead>
+          <tbody>
+          {% for e in recent_expenses %}
+            <tr><td data-label="التصنيف">{{ e.category }}</td><td data-label="المبلغ">{{ e.amount }}</td><td data-label="التاريخ">{{ e.expense_date }}</td></tr>
+          {% else %}
+            <tr><td colspan="3">لا توجد بيانات.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

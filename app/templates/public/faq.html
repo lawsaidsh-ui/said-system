@@ -1,0 +1,22 @@
+{% extends "public/base.html" %}
+{% from "public/partials.html" import cta with context %}
+{% block content %}
+<section class="public-page-hero">
+  <div class="public-container">
+    <p class="eyebrow">الأسئلة الشائعة القانونية</p>
+    <h1>إجابات مباشرة لأسئلة العملاء</h1>
+    <p>إجابات عامة تساعدك على فهم طريقة التواصل والخدمات، ولا تغني عن استشارة قانونية خاصة بملفك.</p>
+  </div>
+</section>
+<section class="public-section">
+  <div class="public-container faq-list">
+    {% for question, answer in faqs %}
+    <details>
+      <summary>{{ question }}</summary>
+      <p>{{ answer }}</p>
+    </details>
+    {% endfor %}
+  </div>
+</section>
+<div class="public-container">{{ cta() }}</div>
+{% endblock %}

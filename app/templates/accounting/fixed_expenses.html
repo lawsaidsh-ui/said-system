@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}المصاريف الشهرية الثابتة{% endblock %}
+{% block content %}
+<div class="fixed-expenses-page">
+  <div class="section-head">
+    <div>
+      <h2 class="page-title">المصاريف الشهرية الثابتة</h2>
+      <p class="muted">تسجيل ومتابعة الالتزامات الشهرية المتكررة للمكتب.</p>
+    </div>
+    {% if can_write_fixed_expenses %}
+      <button class="btn btn-primary" type="button" data-open-dialog="fixedExpenseCreateDialog">إضافة مصروف ثابت</button>
+    {% endif %}
+  </div>
+  {% if user.role in ["admin", "accountant"] %}
+    {% include "accounting/nav.html" %}
+  {% endif %}
+
+  <div class="stats-grid fixed-expense-stats">
+    <div class="stat-card expense-stat"><span>إجمالي المصاريف الشهرية النشطة</span><strong>{{ summary.monthly_total }}</strong><small>يشمل الرواتب الشهرية: {{ summary.salary_total }}</small></div>
+    <div class="stat-card"><span>عدد المصاريف النشطة</span><strong>{{ summary.active_count }}</strong></div>
+    <div class="stat-card"><span>أقرب مصروف مستحق</span>{% if summary.next_due %}<strong>{{ summary.next_due.expense.amount }}</strong><small>{{ summary.next_due.expense.title }} · {{ summary.next_due.due_date }}</small>{% else %}<strong>-</strong><small>لا توجد مصاريف نشطة</small>{% endif %}</div>
+    <div class="stat-card"><span>المصاريف السنوية المتوقعة</span><strong>{{ summary.annual_total }}</strong><small>الإجمالي الشهري × 12</small></div>
+    <div class="stat-card revenue-stat"><span>إجمالي الإيرادات الشهرية</span><strong>{{ summary.monthly_revenue }}</strong></div>
+    <div class="stat-card"><span>صافي الربح التقريبي</span><strong>{{ summary.estimated_net_profit }}</strong></div>
+    <div class="stat-card expense-stat"><span>نقطة التعادل الشهرية</span><strong>{{ summary.break_even_monthly }}</strong></div>
+    <div class="stat-card"><span>الاحتياج اليومي للتغطية</span><strong>{{ summary.daily_needed }}</strong></div>
+  </div>
+
+  <section class="panel">
+    <form class="filters fixed-expense-filters" method="get">
+      <div class="field">
+        <label>بحث باسم المصروف أو المورد</label>
+        <input class="input" name="q" value="{{ filters.q }}" placeholder="إيجار، شركة الاتصالات...">
+      </div>
+      <div class="field">
+        <label>التصنيف</label>
+        <select name="category">
+          <option value="">كل التصنيفات</option>
+          {% for category in categories %}
+            <option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>{{ category }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>الحالة</label>
+        <select name="status">
+          <option value="">كل الحالات</option>
+          <option value="active" {% if filters.status == "active" %}selected{% endif %}>نشط</option>
+          <option value="inactive" {% if filters.status == "inactive" %}selected{% endif %}>متوقف</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">تطبيق الفلاتر</button>
+        <a class="btn btn-secondary" href="/accounting/fixed-expenses">مسح</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel fixed-expense-table-panel">
+    <div class="section-head">
+      <h3 class="section-title">جدول المصاريف الثابتة</h3>
+      <span class="badge badge-blue">{{ expenses|length }} سجل</span>
+    </div>
+    <div class="table-wrap">
+      <table class="fixed-expense-table">
+        <tr>
+          <th>اسم المصروف</th>
+          <th>التصنيف</th>
+          <th>المبلغ الشهري</th>
+          <th>يوم الاستحقاق</th>
+          <th>طريقة الدفع</th>
+          <th>المورد</th>
+          <th>الحالة</th>
+          <th>آخر تعديل</th>
+          <th>الإجراءات</th>
+        </tr>
+        {% for item in expenses %}
+          <tr>
+            <td data-label="اسم المصروف"><strong>{{ item.title }}</strong>{% if item.notes %}<small class="muted block">{{ item.notes }}</small>{% endif %}</td>
+            <td data-label="التصنيف">{{ item.category }}</td>
+            <td data-label="المبلغ الشهري">{{ item.amount }}</td>
+            <td data-label="يوم الاستحقاق">{{ item.due_day }}</td>
+            <td data-label="طريقة الدفع">{{ payment_methods.get(item.payment_method, item.payment_method or "-") }}</td>
+            <td data-label="المورد">{{ item.vendor_name or "-" }}</td>
+            <td data-label="الحالة"><span class="badge {% if item.is_active %}badge-green{% else %}badge-orange{% endif %}">{{ "نشط" if item.is_active else "متوقف" }}</span></td>
+            <td data-label="آخر تعديل">{{ item.updated_at.strftime("%Y-%m-%d") if item.updated_at else "-" }}</td>
+            <td data-label="الإجراءات">
+              <div class="actions">
+                {% if can_write_fixed_expenses %}
+                  <button class="btn btn-secondary" type="button" data-open-dialog="fixedExpenseEdit{{ item.id }}">تعديل</button>
+                  <form method="post" action="/accounting/fixed-expenses/{{ item.id }}/toggle">
+                    <button class="btn btn-secondary" type="submit">{{ "إيقاف" if item.is_active else "تفعيل" }}</button>
+                  </form>
+                {% endif %}
+                {% if can_delete_fixed_expenses %}
+                  <form method="post" action="/accounting/fixed-expenses/{{ item.id }}/delete">
+                    <button class="btn btn-danger" type="submit" data-confirm="هل تريد حذف هذا المصروف الثابت؟">حذف</button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="9">لا توجد مصاريف ثابتة مطابقة للفلاتر الحالية.</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </section>
+
+  {% if can_write_fixed_expenses %}
+    <dialog class="fixed-expense-dialog" id="fixedExpenseCreateDialog">
+      <div class="dialog-head"><h3>إضافة مصروف ثابت</h3><button class="icon-btn" type="button" data-close-dialog aria-label="إغلاق">×</button></div>
+      {% include "accounting/fixed_expense_form.html" %}
+    </dialog>
+    {% for item in expenses %}
+      <dialog class="fixed-expense-dialog" id="fixedExpenseEdit{{ item.id }}">
+        <div class="dialog-head"><h3>تعديل مصروف ثابت</h3><button class="icon-btn" type="button" data-close-dialog aria-label="إغلاق">×</button></div>
+        {% include "accounting/fixed_expense_form.html" %}
+      </dialog>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}

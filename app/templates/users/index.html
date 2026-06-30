@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}المستخدمون{% endblock %}
+{% block content %}
+<div class="users-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">المستخدمون</h2>
+    <a class="btn btn-primary" href="/users/new">مستخدم جديد</a>
+  </div>
+
+  <section class="panel users-list-panel">
+    <div class="table-wrap"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الدور</th><th>الحالة</th><th></th></tr></thead><tbody>
+    {% for item in users %}<tr><td data-label="الاسم">{{ item.full_name }}</td><td data-label="البريد">{{ item.email }}</td><td data-label="الهاتف">{{ item.phone or '-' }}</td><td data-label="الدور">{{ role_labels.get(item.role, item.role) }}</td><td data-label="الحالة">{{ 'نشط' if item.is_active else 'معطل' }}</td><td data-label="الإجراء"><a class="btn btn-secondary" href="/users/{{ item.id }}/edit">تعديل</a></td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}
