@@ -7,9 +7,25 @@
     <a class="btn btn-primary" href="/users/new">مستخدم جديد</a>
   </div>
 
+  {% if reset_result %}
+    <section class="panel credential-reset-panel">
+      <h3 class="section-title">كلمة مرور مؤقتة جديدة</h3>
+      <p class="muted">اعرضها للمستخدم الآن. لن تظهر مرة أخرى بعد مغادرة الصفحة.</p>
+      <div class="credential-result">
+        <span>{{ reset_result.full_name }} - {{ reset_result.email }}</span>
+        <code>{{ reset_result.password }}</code>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="panel credential-note">
+    <strong>ملاحظة أمنية:</strong>
+    لا يمكن عرض كلمات المرور الحالية لأنها محفوظة بصيغة مشفرة. يمكن للمدير فقط تعيين كلمة مرور جديدة أو توليد كلمة مرور مؤقتة.
+  </section>
+
   <section class="panel users-list-panel">
     <div class="table-wrap"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الدور</th><th>الحالة</th><th></th></tr></thead><tbody>
-    {% for item in users %}<tr><td data-label="الاسم">{{ item.full_name }}</td><td data-label="البريد">{{ item.email }}</td><td data-label="الهاتف">{{ item.phone or '-' }}</td><td data-label="الدور">{{ role_labels.get(item.role, item.role) }}</td><td data-label="الحالة">{{ 'نشط' if item.is_active else 'معطل' }}</td><td data-label="الإجراء"><a class="btn btn-secondary" href="/users/{{ item.id }}/edit">تعديل</a></td></tr>{% endfor %}
+    {% for item in users %}<tr><td data-label="الاسم">{{ item.full_name }}</td><td data-label="البريد">{{ item.email }}</td><td data-label="الهاتف">{{ item.phone or '-' }}</td><td data-label="الدور">{{ role_labels.get(item.role, item.role) }}</td><td data-label="الحالة">{{ 'نشط' if item.is_active else 'معطل' }}</td><td data-label="الإجراء"><div class="actions"><a class="btn btn-secondary" href="/users/{{ item.id }}/edit">تعديل</a><form class="inline-form" method="post" action="/users/{{ item.id }}/reset-password"><button class="btn btn-secondary" data-confirm="توليد كلمة مرور مؤقتة جديدة لهذا المستخدم؟ سيتم إلغاء كلمة المرور السابقة." type="submit">كلمة مؤقتة</button></form></div></td></tr>{% endfor %}
     </tbody></table></div>
   </section>
 </div>

@@ -5,5 +5,6 @@ __pycache__/
 .pytest_cache/
 saeed_law.db
 *.db
+user_credentials.local.md
 app/static/uploads/*
 !app/static/uploads/.gitkeep

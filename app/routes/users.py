@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Form, Request
+import secrets
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,11 +13,16 @@ from app.services.security import hash_password
 from app.templating import templates
 
 router = APIRouter(prefix="/users", tags=["users"])
+PASSWORD_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+
+
+def generate_temporary_password(length: int = 14) -> str:
+    return "".join(secrets.choice(PASSWORD_ALPHABET) for _ in range(length))
 
 
 @router.get("")
 def users_index(request: Request, db: Session = Depends(get_db), user: User = Depends(require_roles("admin"))):
-    return templates.TemplateResponse("users/index.html", {"request": request, "user": user, "users": db.scalars(select(User).order_by(User.created_at.desc())).all()})
+    return templates.TemplateResponse("users/index.html", {"request": request, "user": user, "users": db.scalars(select(User).order_by(User.created_at.desc())).all(), "reset_result": None})
 
 
 @router.get("/new")
@@ -52,3 +59,36 @@ def user_update(request: Request, user_id: int, full_name: str = Form(...), emai
     log_action(db, user=user, action="change_user_role", entity_type="user", entity_id=item.id, old_value=old, new_value={"role": role, "is_active": item.is_active}, request=request)
     db.commit()
     return RedirectResponse("/users", status_code=303)
+
+
+@router.post("/{user_id}/reset-password")
+def user_reset_password(request: Request, user_id: int, db: Session = Depends(get_db), user: User = Depends(require_roles("admin"))):
+    item = db.get(User, user_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود.")
+    temporary_password = generate_temporary_password()
+    item.password_hash = hash_password(temporary_password)
+    log_action(
+        db,
+        user=user,
+        action="reset_user_password",
+        entity_type="user",
+        entity_id=item.id,
+        new_value={"email": item.email},
+        request=request,
+    )
+    db.commit()
+    users = db.scalars(select(User).order_by(User.created_at.desc())).all()
+    return templates.TemplateResponse(
+        "users/index.html",
+        {
+            "request": request,
+            "user": user,
+            "users": users,
+            "reset_result": {
+                "full_name": item.full_name,
+                "email": item.email,
+                "password": temporary_password,
+            },
+        },
+    )

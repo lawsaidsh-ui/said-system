@@ -28,6 +28,7 @@ ACTION_LABELS = {
     "delete_expense": "حذف مصروف",
     "create_user": "إضافة مستخدم",
     "change_user_role": "تعديل صلاحيات مستخدم",
+    "reset_user_password": "إعادة تعيين كلمة مرور مستخدم",
 }
 
 ENTITY_LABELS = {
