@@ -53,6 +53,7 @@ class Client(TimestampMixin, Base):
     invoices: Mapped[list["Invoice"]] = relationship(back_populates="client")
     consultations: Mapped[list["Consultation"]] = relationship(back_populates="client")
     whatsapp_logs: Mapped[list["WhatsAppLog"]] = relationship(back_populates="client")
+    agencies: Mapped[list["Agency"]] = relationship(back_populates="client")
 
 
 class Matter(TimestampMixin, Base):
@@ -85,6 +86,27 @@ class Matter(TimestampMixin, Base):
     documents: Mapped[list["Document"]] = relationship(back_populates="matter")
     invoices: Mapped[list["Invoice"]] = relationship(back_populates="matter")
     whatsapp_logs: Mapped[list["WhatsAppLog"]] = relationship(back_populates="matter")
+    agencies: Mapped[list["Agency"]] = relationship(back_populates="matter")
+
+
+class Agency(TimestampMixin, Base):
+    __tablename__ = "agencies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    agency_number: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), index=True, nullable=False)
+    matter_id: Mapped[int | None] = mapped_column(ForeignKey("matters.id"), index=True)
+    issued_at: Mapped[date | None] = mapped_column(Date)
+    expires_at: Mapped[date | None] = mapped_column(Date, index=True)
+    status: Mapped[str] = mapped_column(String(40), index=True, default="active", nullable=False)
+    notary_office: Mapped[str | None] = mapped_column(String(255))
+    authorized_person: Mapped[str | None] = mapped_column(String(255))
+    scope: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    client: Mapped[Client] = relationship(back_populates="agencies")
+    matter: Mapped[Matter | None] = relationship(back_populates="agencies")
 
 
 class WhatsAppTemplate(TimestampMixin, Base):

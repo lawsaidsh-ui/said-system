@@ -4,6 +4,7 @@ NAV_BY_ROLE = {
         ("/owner-financial", "تقرير المالك المالي"),
         ("/accounting", "النظام المحاسبي"),
         ("/clients", "العملاء"),
+        ("/agencies", "الوكالات"),
         ("/matters", "القضايا"),
         ("/sessions", "الجلسات"),
         ("/tasks", "المهام"),

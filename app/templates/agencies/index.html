@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}الوكالات{% endblock %}
+{% block content %}
+<div class="clients-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">الوكالات</h2>
+    <a class="btn btn-primary" href="/agencies/new">وكالة جديدة</a>
+  </div>
+
+  <section class="panel clients-filter-panel">
+    <form class="filters" method="get">
+      <div class="field">
+        <label>بحث</label>
+        <input class="input" name="q" value="{{ q }}" placeholder="رقم الوكالة، العنوان، العميل">
+      </div>
+      <div class="field">
+        <label>الحالة</label>
+        <select name="status">
+          <option value="">الكل</option>
+          {% for key, val in agency_statuses.items() %}
+            <option value="{{ key }}" {% if status==key %}selected{% endif %}>{{ val }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+    </form>
+  </section>
+
+  <section class="panel clients-list-panel">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم الوكالة</th>
+            <th>العنوان</th>
+            <th>العميل</th>
+            <th>القضية</th>
+            <th>تاريخ الإصدار</th>
+            <th>تاريخ الانتهاء</th>
+            <th>الحالة</th>
+            <th>الإجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for agency in agencies %}
+          <tr>
+            <td data-label="رقم الوكالة">{{ agency.agency_number }}</td>
+            <td data-label="العنوان">{{ agency.title }}</td>
+            <td data-label="العميل">{{ agency.client.full_name if agency.client else '-' }}</td>
+            <td data-label="القضية">{{ agency.matter.case_number if agency.matter else '-' }}</td>
+            <td data-label="تاريخ الإصدار">{{ agency.issued_at or '-' }}</td>
+            <td data-label="تاريخ الانتهاء">{{ agency.expires_at or '-' }}</td>
+            <td data-label="الحالة"><span class="badge">{{ agency_statuses.get(agency.status, agency.status) }}</span></td>
+            <td data-label="الإجراء" class="actions">
+              <a class="btn btn-secondary" href="/agencies/{{ agency.id }}">عرض</a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8">لا توجد وكالات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

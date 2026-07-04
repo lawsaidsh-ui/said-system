@@ -1,5 +1,6 @@
 from app.models.core import (
     AccountTransfer,
+    Agency,
     AuditLog,
     Appointment,
     CaseFee,
@@ -30,6 +31,7 @@ from app.models.core import (
 
 __all__ = [
     "AccountTransfer",
+    "Agency",
     "AuditLog",
     "Appointment",
     "CaseFee",

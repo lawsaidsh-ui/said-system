@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}تفاصيل الوكالة{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h2 class="page-title mb-0">تفاصيل الوكالة</h2>
+  <div class="actions">
+    <a class="btn btn-primary" href="/agencies/{{ agency.id }}/edit">تعديل</a>
+    <a class="btn btn-secondary" href="/agencies">العودة للوكالات</a>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="grid-2">
+    <p><strong>رقم الوكالة:</strong> {{ agency.agency_number }}</p>
+    <p><strong>العنوان:</strong> {{ agency.title }}</p>
+    <p><strong>العميل:</strong> {{ agency.client.full_name if agency.client else '-' }}</p>
+    <p><strong>القضية:</strong> {{ agency.matter.case_number if agency.matter else '-' }}</p>
+    <p><strong>الحالة:</strong> {{ agency_statuses.get(agency.status, agency.status) }}</p>
+    <p><strong>جهة التوثيق:</strong> {{ agency.notary_office or '-' }}</p>
+    <p><strong>المفوض/الوكيل:</strong> {{ agency.authorized_person or '-' }}</p>
+    <p><strong>تاريخ الإصدار:</strong> {{ agency.issued_at or '-' }}</p>
+    <p><strong>تاريخ الانتهاء:</strong> {{ agency.expires_at or '-' }}</p>
+  </div>
+  {% if agency.scope %}
+    <hr>
+    <h3 class="section-title">نطاق الوكالة</h3>
+    <p>{{ agency.scope }}</p>
+  {% endif %}
+  {% if agency.notes %}
+    <hr>
+    <h3 class="section-title">ملاحظات</h3>
+    <p>{{ agency.notes }}</p>
+  {% endif %}
+</section>
+{% endblock %}
