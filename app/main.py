@@ -32,7 +32,8 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.on_event("startup")
 def on_startup() -> None:
-    Base.metadata.create_all(bind=engine)
+    if engine.dialect.name == "sqlite":
+        Base.metadata.create_all(bind=engine)
     ensure_runtime_schema(engine)
     with SessionLocal() as db:
         seed_database(db)
