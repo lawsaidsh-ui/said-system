@@ -90,7 +90,7 @@ def agency_create(
     request: Request,
     agency_number: str = Form(...),
     title: str = Form(...),
-    client_id: int = Form(...),
+    client_id: str = Form(""),
     matter_id: str = Form(""),
     issued_at: str = Form(""),
     expires_at: str = Form(""),
@@ -99,6 +99,13 @@ def agency_create(
     authorized_person: str = Form(""),
     scope: str = Form(""),
     notes: str = Form(""),
+    new_client_name: str = Form(""),
+    new_client_phone: str = Form(""),
+    new_client_email: str = Form(""),
+    new_client_civil_id: str = Form(""),
+    new_client_type: str = Form("individual"),
+    new_client_address: str = Form(""),
+    new_client_notes: str = Form(""),
     db: Session = Depends(get_db),
     user: User = Depends(require_roles("admin")),
 ):
@@ -110,11 +117,44 @@ def agency_create(
             _agency_context(db, request=request, user=user, agency=None, error="رقم الوكالة مسجل مسبقاً."),
             status_code=400,
         )
-    parsed_matter_id = _validate_matter(db, client_id, matter_id)
+
+    # Create new client inline if name is provided
+    if new_client_name.strip():
+        new_client = Client(
+            full_name=new_client_name.strip(),
+            phone=none_if_empty(new_client_phone),
+            email=none_if_empty(new_client_email),
+            civil_id=none_if_empty(new_client_civil_id),
+            client_type=new_client_type if new_client_type in ("individual", "company") else "individual",
+            address=none_if_empty(new_client_address),
+            notes=none_if_empty(new_client_notes),
+        )
+        db.add(new_client)
+        db.flush()
+        log_action(
+            db,
+            user=user,
+            action="create_client",
+            entity_type="client",
+            entity_id=new_client.id,
+            new_value={"full_name": new_client.full_name},
+            request=request,
+        )
+        resolved_client_id = new_client.id
+    else:
+        if not client_id:
+            return templates.TemplateResponse(
+                "agencies/form.html",
+                _agency_context(db, request=request, user=user, agency=None, error="يجب اختيار عميل أو إدخال بيانات عميل جديد."),
+                status_code=400,
+            )
+        resolved_client_id = int(client_id)
+
+    parsed_matter_id = _validate_matter(db, resolved_client_id, matter_id)
     agency = Agency(
         agency_number=agency_number,
         title=title.strip(),
-        client_id=client_id,
+        client_id=resolved_client_id,
         matter_id=parsed_matter_id,
         issued_at=parse_date(issued_at),
         expires_at=parse_date(expires_at),

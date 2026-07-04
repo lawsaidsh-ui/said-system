@@ -48,14 +48,21 @@
   <div class="form-section full">
     <h3 class="section-title">الارتباط بالملف</h3>
     <div class="form-grid">
-      <div class="field">
+      <div class="field" id="client-select-field">
         <label>العميل</label>
-        <select name="client_id" required data-client-filter-source="agency-form">
+        <select name="client_id" id="client_id_select" data-client-filter-source="agency-form">
           <option value="">-- اختر العميل --</option>
           {% for client in clients %}
             <option value="{{ client.id }}" {% if agency and agency.client_id==client.id %}selected{% endif %}>{{ client.full_name }}{% if client.phone %} - {{ client.phone }}{% endif %}</option>
           {% endfor %}
         </select>
+        {% if not agency %}
+        <div style="margin-top:6px;">
+          <button type="button" id="toggle-new-client" class="btn btn-secondary" style="font-size:0.85rem;padding:4px 12px;">
+            + إضافة عميل جديد
+          </button>
+        </div>
+        {% endif %}
       </div>
       <div class="field">
         <label>القضية</label>
@@ -67,6 +74,79 @@
         </select>
       </div>
     </div>
+
+    {% if not agency %}
+    <!-- قسم إضافة عميل جديد -->
+    <div id="new-client-section" style="display:none; margin-top:16px; border:1px solid #d1d5db; border-radius:8px; padding:16px; background:#f9fafb;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h4 style="margin:0; font-size:1rem; font-weight:600; color:#374151;">بيانات العميل الجديد</h4>
+        <button type="button" id="cancel-new-client" class="btn btn-secondary" style="font-size:0.8rem;padding:2px 10px;">إلغاء</button>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>الاسم الكامل <span style="color:red">*</span></label>
+          <input class="input" name="new_client_name" id="new_client_name" placeholder="اسم العميل الكامل">
+        </div>
+        <div class="field">
+          <label>نوع العميل</label>
+          <select name="new_client_type">
+            <option value="individual">فرد</option>
+            <option value="company">شركة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الهاتف</label>
+          <input class="input" name="new_client_phone" placeholder="رقم الهاتف">
+        </div>
+        <div class="field">
+          <label>الرقم المدني</label>
+          <input class="input" name="new_client_civil_id" placeholder="الرقم المدني">
+        </div>
+        <div class="field">
+          <label>البريد الإلكتروني</label>
+          <input class="input" type="email" name="new_client_email" placeholder="البريد الإلكتروني">
+        </div>
+        <div class="field">
+          <label>العنوان</label>
+          <input class="input" name="new_client_address" placeholder="عنوان العميل">
+        </div>
+        <div class="field full">
+          <label>ملاحظات</label>
+          <textarea name="new_client_notes" rows="2" placeholder="ملاحظات إضافية عن العميل"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      var toggleBtn = document.getElementById('toggle-new-client');
+      var cancelBtn = document.getElementById('cancel-new-client');
+      var section = document.getElementById('new-client-section');
+      var selectField = document.getElementById('client-select-field');
+      var clientSelect = document.getElementById('client_id_select');
+      var nameInput = document.getElementById('new_client_name');
+
+      function showNewClient() {
+        section.style.display = 'block';
+        clientSelect.value = '';
+        clientSelect.disabled = true;
+        toggleBtn.style.display = 'none';
+        nameInput.required = true;
+      }
+
+      function hideNewClient() {
+        section.style.display = 'none';
+        clientSelect.disabled = false;
+        toggleBtn.style.display = '';
+        nameInput.required = false;
+        nameInput.value = '';
+      }
+
+      toggleBtn.addEventListener('click', showNewClient);
+      cancelBtn.addEventListener('click', hideNewClient);
+    })();
+    </script>
+    {% endif %}
   </div>
 
   <div class="field full">
