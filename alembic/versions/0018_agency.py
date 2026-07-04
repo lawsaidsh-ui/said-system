@@ -1,6 +1,6 @@
 """ensure agencies table exists
 
-Revision ID: 0018_ensure_agencies_table_exists
+Revision ID: 0018_agency
 Revises: 0017_agencies
 Create Date: 2026-07-04
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 
-revision: str = "0018_ensure_agencies_table_exists"
+revision: str = "0018_agency"
 down_revision: Union[str, None] = "0017_agencies"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
