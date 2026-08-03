@@ -1,10 +1,12 @@
 from datetime import date, datetime, time
 from decimal import Decimal
+from math import ceil
 from pathlib import Path
 import re
+from urllib.parse import urlencode
 from uuid import uuid4
 
-from fastapi import UploadFile
+from fastapi import Request, UploadFile
 from sqlalchemy import Select, or_, select
 from sqlalchemy.orm import Session
 
@@ -197,6 +199,42 @@ def int_or_none(value: str | int | None) -> int | None:
     if value in (None, "", "0"):
         return None
     return int(value)
+
+
+def pagination_context(
+    request: Request,
+    *,
+    total: int,
+    page: int,
+    per_page: int,
+    show_all: bool,
+) -> dict:
+    total_pages = max(ceil(total / per_page), 1) if not show_all else 1
+    page = min(max(page, 1), total_pages)
+
+    def page_url(target_page: int | None = None, *, all_rows: bool = False) -> str:
+        params = dict(request.query_params)
+        if all_rows:
+            params["all"] = "1"
+            params.pop("page", None)
+        else:
+            params.pop("all", None)
+            params["page"] = str(target_page or 1)
+        return f"{request.url.path}?{urlencode(params)}" if params else request.url.path
+
+    return {
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": total_pages,
+        "show_all": show_all,
+        "has_previous": not show_all and page > 1,
+        "has_next": not show_all and page < total_pages,
+        "previous_url": page_url(page - 1),
+        "next_url": page_url(page + 1),
+        "all_url": page_url(all_rows=True),
+        "paged_url": page_url(1),
+    }
 
 
 def search_clients(stmt: Select, q: str | None) -> Select:

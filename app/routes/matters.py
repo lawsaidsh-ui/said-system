@@ -2,18 +2,115 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, or_, select
+from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import Client, Document, Matter, User
-from app.routes.helpers import find_similar_client, get_form_context, int_or_none, none_if_empty, parse_date, parse_decimal
+from app.routes.helpers import find_similar_client, get_form_context, int_or_none, none_if_empty, pagination_context, parse_date, parse_decimal
 from app.services.audit import audit_logs_for_targets, log_action
 from app.services.auth import ensure_role, get_current_user
 from app.services.tasks import create_matter_status_change_task, generate_automatic_tasks
 from app.templating import templates
 
 router = APIRouter(prefix="/matters", tags=["matters"])
+
+
+def matter_text_key(value: str | None) -> str:
+    return " ".join((value or "").strip().lower().split())
+
+
+def matter_duplicate_signature(
+    *,
+    client_id: int,
+    title: str,
+    ministry_case_number: str | None,
+    case_type: str | None,
+    court_name: str | None,
+    opponent_name: str | None,
+    opened_at: date | None,
+    claim_amount,
+) -> tuple:
+    ministry_key = matter_text_key(ministry_case_number)
+    if ministry_key:
+        return ("ministry", ministry_key)
+    return (
+        "manual",
+        client_id,
+        matter_text_key(title),
+        matter_text_key(case_type),
+        matter_text_key(court_name),
+        matter_text_key(opponent_name),
+        opened_at.isoformat() if opened_at else "",
+        str(claim_amount or "0"),
+    )
+
+
+def find_duplicate_matter(
+    db: Session,
+    *,
+    client_id: int,
+    title: str,
+    ministry_case_number: str | None,
+    case_type: str | None,
+    court_name: str | None,
+    opponent_name: str | None,
+    opened_at: date | None,
+    claim_amount,
+    exclude_matter_id: int | None = None,
+) -> Matter | None:
+    signature = matter_duplicate_signature(
+        client_id=client_id,
+        title=title,
+        ministry_case_number=ministry_case_number,
+        case_type=case_type,
+        court_name=court_name,
+        opponent_name=opponent_name,
+        opened_at=opened_at,
+        claim_amount=claim_amount,
+    )
+    stmt = select(Matter).order_by(Matter.id)
+    if signature[0] != "ministry":
+        stmt = stmt.where(Matter.client_id == client_id)
+    if exclude_matter_id:
+        stmt = stmt.where(Matter.id != exclude_matter_id)
+    for matter in db.scalars(stmt).all():
+        existing_signature = matter_duplicate_signature(
+            client_id=matter.client_id,
+            title=matter.title,
+            ministry_case_number=matter.ministry_case_number,
+            case_type=matter.case_type,
+            court_name=matter.court_name,
+            opponent_name=matter.opponent_name,
+            opened_at=matter.opened_at,
+            claim_amount=matter.claim_amount,
+        )
+        if existing_signature == signature:
+            return matter
+    return None
+
+
+def find_existing_matter_number(
+    db: Session,
+    *,
+    case_number: str | None = None,
+    ministry_case_number: str | None = None,
+    exclude_matter_id: int | None = None,
+) -> Matter | None:
+    normalized_case_number = matter_text_key(case_number)
+    normalized_ministry_case_number = matter_text_key(ministry_case_number)
+    if not normalized_case_number and not normalized_ministry_case_number:
+        return None
+    stmt = select(Matter).order_by(Matter.id)
+    if exclude_matter_id:
+        stmt = stmt.where(Matter.id != exclude_matter_id)
+    for matter in db.scalars(stmt).all():
+        if normalized_case_number and matter_text_key(matter.case_number) == normalized_case_number:
+            return matter
+        if normalized_ministry_case_number and matter_text_key(matter.ministry_case_number) == normalized_ministry_case_number:
+            return matter
+    return None
 
 
 def next_office_case_number(db: Session) -> str:
@@ -36,33 +133,54 @@ def matters_index(
     lawyer_id: str | None = None,
     court: str | None = None,
     case_type: str | None = None,
+    page: int = 1,
+    all: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    per_page = 25
+    show_all = all == "1"
     parsed_lawyer_id = int_or_none(lawyer_id)
     stmt = select(Matter).join(Client).options(selectinload(Matter.client), selectinload(Matter.assigned_lawyer))
+    count_stmt = select(func.count(Matter.id)).join(Client)
     if q:
         like = f"%{q}%"
-        stmt = stmt.where(
-            or_(
-                Matter.case_number.ilike(like),
-                Matter.ministry_case_number.ilike(like),
-                Matter.title.ilike(like),
-                Client.full_name.ilike(like),
-            )
+        search_filter = or_(
+            cast(Matter.id, String).ilike(like),
+            Matter.case_number.ilike(like),
+            Matter.ministry_case_number.ilike(like),
+            Matter.title.ilike(like),
+            Client.full_name.ilike(like),
+            cast(Client.id, String).ilike(like),
+            Client.phone.ilike(like),
+            Client.civil_id.ilike(like),
         )
+        stmt = stmt.where(search_filter)
+        count_stmt = count_stmt.where(search_filter)
     if status:
         stmt = stmt.where(Matter.status == status)
+        count_stmt = count_stmt.where(Matter.status == status)
     if parsed_lawyer_id:
         stmt = stmt.where(Matter.assigned_lawyer_id == parsed_lawyer_id)
+        count_stmt = count_stmt.where(Matter.assigned_lawyer_id == parsed_lawyer_id)
     if court:
         stmt = stmt.where(Matter.court_name.ilike(f"%{court}%"))
+        count_stmt = count_stmt.where(Matter.court_name.ilike(f"%{court}%"))
     if case_type:
         stmt = stmt.where(Matter.case_type.ilike(f"%{case_type}%"))
-    matters = db.scalars(stmt.order_by(Matter.created_at.desc())).all()
+        count_stmt = count_stmt.where(Matter.case_type.ilike(f"%{case_type}%"))
+
+    total_matters = db.scalar(count_stmt) or 0
+    pagination = pagination_context(request, total=total_matters, page=page, per_page=per_page, show_all=show_all)
+    stmt = stmt.order_by(Matter.created_at.desc(), Matter.id.desc())
+    if not show_all:
+        stmt = stmt.limit(per_page).offset((pagination["page"] - 1) * per_page)
+    matters = db.scalars(stmt).all()
     context = get_form_context(db)
     context["matters"] = matters
     context["matter_count"] = len(matters)
+    context["total_matters"] = total_matters
+    context["pagination"] = pagination
     context["filters"] = {
         "q": q or "",
         "status": status or "",
@@ -174,29 +292,74 @@ def matter_create(
                 status_code=400,
             )
 
+    normalized_ministry_case_number = none_if_empty(ministry_case_number)
+    normalized_case_type = none_if_empty(case_type)
+    normalized_court_name = none_if_empty(court_name)
+    normalized_opponent_name = none_if_empty(opponent_name)
+    parsed_claim_amount = parse_decimal(claim_amount)
+    parsed_opened_at = parse_date(opened_at)
+    parsed_closed_at = parse_date(closed_at)
+    parsed_appeal_deadline = parse_date(appeal_deadline)
+    parsed_cassation_deadline = parse_date(cassation_deadline)
+
+    duplicate_matter = find_existing_matter_number(
+        db,
+        case_number=none_if_empty(case_number),
+        ministry_case_number=normalized_ministry_case_number,
+    ) or find_duplicate_matter(
+        db,
+        client_id=matter_client_id,
+        title=title,
+        ministry_case_number=normalized_ministry_case_number,
+        case_type=normalized_case_type,
+        court_name=normalized_court_name,
+        opponent_name=normalized_opponent_name,
+        opened_at=parsed_opened_at,
+        claim_amount=parsed_claim_amount,
+    )
+    if duplicate_matter:
+        return RedirectResponse(f"/matters/{duplicate_matter.id}", status_code=303)
+
     office_case_number = none_if_empty(case_number) or next_office_case_number(db)
     matter = Matter(
         case_number=office_case_number,
-        ministry_case_number=none_if_empty(ministry_case_number),
+        ministry_case_number=normalized_ministry_case_number,
         title=title,
         client_id=matter_client_id,
         assigned_lawyer_id=int_or_none(assigned_lawyer_id),
-        case_type=none_if_empty(case_type),
-        court_name=none_if_empty(court_name),
+        case_type=normalized_case_type,
+        court_name=normalized_court_name,
         court_level=none_if_empty(court_level),
-        opponent_name=none_if_empty(opponent_name),
+        opponent_name=normalized_opponent_name,
         opponent_phone=none_if_empty(opponent_phone),
         status=status,
         priority=priority,
         description=none_if_empty(description),
-        claim_amount=parse_decimal(claim_amount),
-        opened_at=parse_date(opened_at),
-        closed_at=parse_date(closed_at),
-        appeal_deadline=parse_date(appeal_deadline),
-        cassation_deadline=parse_date(cassation_deadline),
+        claim_amount=parsed_claim_amount,
+        opened_at=parsed_opened_at,
+        closed_at=parsed_closed_at,
+        appeal_deadline=parsed_appeal_deadline,
+        cassation_deadline=parsed_cassation_deadline,
     )
     db.add(matter)
-    db.flush()
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        duplicate_matter = find_duplicate_matter(
+            db,
+            client_id=matter_client_id,
+            title=title,
+            ministry_case_number=normalized_ministry_case_number,
+            case_type=normalized_case_type,
+            court_name=normalized_court_name,
+            opponent_name=normalized_opponent_name,
+            opened_at=parsed_opened_at,
+            claim_amount=parsed_claim_amount,
+        )
+        if duplicate_matter:
+            return RedirectResponse(f"/matters/{duplicate_matter.id}", status_code=303)
+        raise
     log_action(
         db,
         user=user,
@@ -277,24 +440,53 @@ def matter_update(
         "case_number": matter.case_number,
         "ministry_case_number": matter.ministry_case_number,
     }
+    normalized_ministry_case_number = none_if_empty(ministry_case_number)
+    normalized_case_type = none_if_empty(case_type)
+    normalized_court_name = none_if_empty(court_name)
+    normalized_opponent_name = none_if_empty(opponent_name)
+    parsed_claim_amount = parse_decimal(claim_amount)
+    parsed_opened_at = parse_date(opened_at)
+    parsed_closed_at = parse_date(closed_at)
+    parsed_appeal_deadline = parse_date(appeal_deadline)
+    parsed_cassation_deadline = parse_date(cassation_deadline)
+    duplicate_matter = find_existing_matter_number(
+        db,
+        case_number=case_number,
+        ministry_case_number=normalized_ministry_case_number,
+        exclude_matter_id=matter_id,
+    ) or find_duplicate_matter(
+        db,
+        client_id=client_id,
+        title=title,
+        ministry_case_number=normalized_ministry_case_number,
+        case_type=normalized_case_type,
+        court_name=normalized_court_name,
+        opponent_name=normalized_opponent_name,
+        opened_at=parsed_opened_at,
+        claim_amount=parsed_claim_amount,
+        exclude_matter_id=matter_id,
+    )
+    if duplicate_matter:
+        return RedirectResponse(f"/matters/{duplicate_matter.id}", status_code=303)
+
     matter.case_number = case_number
-    matter.ministry_case_number = none_if_empty(ministry_case_number)
+    matter.ministry_case_number = normalized_ministry_case_number
     matter.title = title
     matter.client_id = client_id
     matter.assigned_lawyer_id = int_or_none(assigned_lawyer_id)
-    matter.case_type = none_if_empty(case_type)
-    matter.court_name = none_if_empty(court_name)
+    matter.case_type = normalized_case_type
+    matter.court_name = normalized_court_name
     matter.court_level = none_if_empty(court_level)
-    matter.opponent_name = none_if_empty(opponent_name)
+    matter.opponent_name = normalized_opponent_name
     matter.opponent_phone = none_if_empty(opponent_phone)
     matter.status = status
     matter.priority = priority
     matter.description = none_if_empty(description)
-    matter.claim_amount = parse_decimal(claim_amount)
-    matter.opened_at = parse_date(opened_at)
-    matter.closed_at = parse_date(closed_at)
-    matter.appeal_deadline = parse_date(appeal_deadline)
-    matter.cassation_deadline = parse_date(cassation_deadline)
+    matter.claim_amount = parsed_claim_amount
+    matter.opened_at = parsed_opened_at
+    matter.closed_at = parsed_closed_at
+    matter.appeal_deadline = parsed_appeal_deadline
+    matter.cassation_deadline = parsed_cassation_deadline
     action = "close_matter" if old["status"] != "closed" and status == "closed" else "update_matter"
     log_action(
         db,

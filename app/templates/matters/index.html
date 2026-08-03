@@ -9,21 +9,42 @@
 
   <section class="panel matters-filter-panel">
     <form class="filters" method="get">
-      <div class="field"><label>بحث</label><input class="input" name="q" value="{{ filters.q }}" placeholder="رقم المكتب أو رقم الدعوى بالمحكمة أو العميل"></div>
-      <div class="field"><label>الحالة</label><select name="status"><option value="">الكل</option>{% for key,val in case_statuses.items() %}<option value="{{ key }}" {% if filters.status==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
-      <div class="field"><label>المحامي</label><select name="lawyer_id"><option value="">الكل</option>{% for lawyer in lawyers %}<option value="{{ lawyer.id }}" {% if filters.lawyer_id|string==lawyer.id|string %}selected{% endif %}>{{ lawyer.full_name }}</option>{% endfor %}</select></div>
+      <div class="field">
+        <label>بحث</label>
+        <input class="input" name="q" value="{{ filters.q }}" placeholder="اسم العميل، رقم العميل، رقم المكتب، رقم الدعوى">
+      </div>
+      <div class="field">
+        <label>الحالة</label>
+        <select name="status">
+          <option value="">الكل</option>
+          {% for key,val in case_statuses.items() %}
+            <option value="{{ key }}" {% if filters.status==key %}selected{% endif %}>{{ val }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>المحامي</label>
+        <select name="lawyer_id">
+          <option value="">الكل</option>
+          {% for lawyer in lawyers %}
+            <option value="{{ lawyer.id }}" {% if filters.lawyer_id|string==lawyer.id|string %}selected{% endif %}>{{ lawyer.full_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
       <div class="field"><label>المحكمة</label><input class="input" name="court" value="{{ filters.court }}"></div>
       <div class="field"><label>نوع القضية</label><input class="input" name="case_type" value="{{ filters.case_type }}"></div>
       <button class="btn btn-primary" type="submit">تصفية</button>
+      <a class="btn btn-secondary" href="/matters">إلغاء الفلتر</a>
     </form>
   </section>
 
   <section class="panel matters-list-panel">
     <div class="section-head">
       <h3 class="section-title mb-0">القضايا المعروضة</h3>
-      <span class="muted">{{ matter_count }} قضية</span>
+      <span class="muted">المعروض {{ matter_count }} من {{ total_matters }} قضية</span>
     </div>
     {% include "partials/matter_table.html" %}
+    {% include "partials/pagination.html" %}
   </section>
 </div>
 {% endblock %}

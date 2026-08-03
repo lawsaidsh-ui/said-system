@@ -16,7 +16,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     if not user_id:
         raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/login"})
     user = db.get(User, int(user_id))
-    if not user or not user.is_active:
+    if not user or not user.is_active or user.deleted_at is not None:
         request.session.clear()
         raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/login"})
     return user

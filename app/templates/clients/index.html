@@ -2,20 +2,38 @@
 {% block title %}العملاء{% endblock %}
 {% block content %}
 <div class="clients-page">
-<div class="page-head"><h2 class="page-title mb-0">العملاء</h2><a class="btn btn-primary" href="/clients/new">عميل جديد</a></div>
-<section class="panel clients-filter-panel">
-  <form class="filters" method="get">
-    <div class="field"><label>بحث</label><input class="input" name="q" value="{{ q }}" placeholder="الاسم، الهاتف، الرقم المدني"></div>
-    <div class="field"><label>نوع العميل</label><select name="client_type"><option value="">الكل</option>{% for key,val in client_types.items() %}<option value="{{ key }}" {% if client_type==key %}selected{% endif %}>{{ val }}</option>{% endfor %}</select></div>
-    <button class="btn btn-primary" type="submit">تصفية</button>
-  </form>
-</section>
-<section class="panel clients-list-panel">
-  <div class="section-head">
-    <h3 class="section-title mb-0">العملاء المعروضون</h3>
-    <span class="muted">{{ client_count }} عميل</span>
+  <div class="page-head">
+    <h2 class="page-title mb-0">العملاء</h2>
+    <a class="btn btn-primary" href="/clients/new">عميل جديد</a>
   </div>
-  {% include "partials/client_table.html" %}
-</section>
+
+  <section class="panel clients-filter-panel">
+    <form class="filters" method="get">
+      <div class="field">
+        <label>بحث</label>
+        <input class="input" name="q" value="{{ q }}" placeholder="الاسم، رقم العميل، الهاتف، الرقم المدني، رقم القضية">
+      </div>
+      <div class="field">
+        <label>نوع العميل</label>
+        <select name="client_type">
+          <option value="">الكل</option>
+          {% for key,val in client_types.items() %}
+            <option value="{{ key }}" {% if client_type==key %}selected{% endif %}>{{ val }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">تصفية</button>
+      <a class="btn btn-secondary" href="/clients">إلغاء الفلتر</a>
+    </form>
+  </section>
+
+  <section class="panel clients-list-panel">
+    <div class="section-head">
+      <h3 class="section-title mb-0">العملاء المعروضون</h3>
+      <span class="muted">المعروض {{ client_count }} من {{ total_clients }} عميل</span>
+    </div>
+    {% include "partials/client_table.html" %}
+    {% include "partials/pagination.html" %}
+  </section>
 </div>
 {% endblock %}

@@ -132,6 +132,8 @@ textarea { min-height: 110px; resize: vertical; }
 .btn-primary:hover { background: var(--navy-2); }
 .btn-secondary { background: #fff; color: var(--navy); border-color: #cfd7e3; }
 .btn-danger { background: #b91c1c; color: white; }
+.disabled-link { pointer-events: none; opacity: .48; }
+.pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 .table-wrap { max-width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: top; white-space: nowrap; }
@@ -163,13 +165,13 @@ td { font-size: 14px; }
 /* Clients */
 .clients-page { display: grid; gap: 18px; min-width: 0; }
 .clients-page .panel { margin-bottom: 0; }
-.clients-page .filters { grid-template-columns: minmax(220px, 2fr) minmax(180px, 1fr) auto; }
+.clients-page .filters { grid-template-columns: minmax(220px, 2fr) minmax(180px, 1fr) auto auto; }
 .clients-page .clients-list-panel { overflow: hidden; }
 
 /* Matters */
 .matters-page { display: grid; gap: 18px; min-width: 0; }
 .matters-page .panel { margin-bottom: 0; }
-.matters-page .filters { grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(140px, 1fr)) auto; }
+.matters-page .filters { grid-template-columns: minmax(220px, 1.5fr) repeat(4, minmax(140px, 1fr)) auto auto; }
 .matters-page .matters-list-panel { overflow: hidden; }
 
 /* Sessions */

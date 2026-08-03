@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
-from app.models import Client, Document, User
-from app.routes.helpers import find_similar_client, none_if_empty, search_clients
+from app.models import Client, Document, Matter, User
+from app.routes.helpers import find_similar_client, none_if_empty, pagination_context
 from app.services.audit import audit_logs_for_targets, log_action
 from app.services.auth import ensure_role, get_current_user
 from app.templating import templates
@@ -18,13 +18,39 @@ def clients_index(
     request: Request,
     q: str | None = None,
     client_type: str | None = None,
+    page: int = 1,
+    all: str | None = None,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    stmt = search_clients(select(Client), q)
+    per_page = 25
+    show_all = all == "1"
+    stmt = select(Client).outerjoin(Matter)
+    count_stmt = select(func.count(func.distinct(Client.id))).select_from(Client).outerjoin(Matter)
     if client_type:
         stmt = stmt.where(Client.client_type == client_type)
-    clients = db.scalars(stmt.order_by(Client.created_at.desc())).all()
+        count_stmt = count_stmt.where(Client.client_type == client_type)
+    if q:
+        like = f"%{q}%"
+        search_filter = or_(
+            cast(Client.id, String).ilike(like),
+            Client.full_name.ilike(like),
+            Client.phone.ilike(like),
+            Client.civil_id.ilike(like),
+            Client.company_name.ilike(like),
+            Client.commercial_registration.ilike(like),
+            Matter.case_number.ilike(like),
+            Matter.ministry_case_number.ilike(like),
+        )
+        stmt = stmt.where(search_filter)
+        count_stmt = count_stmt.where(search_filter)
+
+    total_clients = db.scalar(count_stmt) or 0
+    pagination = pagination_context(request, total=total_clients, page=page, per_page=per_page, show_all=show_all)
+    stmt = stmt.distinct().order_by(Client.created_at.desc(), Client.id.desc())
+    if not show_all:
+        stmt = stmt.limit(per_page).offset((pagination["page"] - 1) * per_page)
+    clients = db.scalars(stmt).all()
     return templates.TemplateResponse(
         "clients/index.html",
         {
@@ -32,6 +58,8 @@ def clients_index(
             "user": user,
             "clients": clients,
             "client_count": len(clients),
+            "total_clients": total_clients,
+            "pagination": pagination,
             "q": q or "",
             "client_type": client_type or "",
         },

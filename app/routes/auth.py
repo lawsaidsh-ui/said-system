@@ -22,7 +22,7 @@ def login_page(request: Request):
 
 @router.post("/login")
 def login(request: Request, email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == email))
+    user = db.scalar(select(User).where(User.email == email, User.deleted_at.is_(None)))
     if not user or not user.is_active or not verify_password(password, user.password_hash):
         return templates.TemplateResponse(
             "auth/login.html",

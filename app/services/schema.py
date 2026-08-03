@@ -99,6 +99,13 @@ def ensure_runtime_schema(engine: Engine) -> None:
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_fixed_monthly_expenses_vendor_name ON fixed_monthly_expenses (vendor_name)"))
     _ensure_date_quality_columns(engine, table_names)
 
+    if "users" in table_names:
+        user_columns = {column["name"] for column in inspector.get_columns("users")}
+        with engine.begin() as conn:
+            if "deleted_at" not in user_columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN deleted_at DATETIME"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_users_deleted_at ON users (deleted_at)"))
+
     if "tasks" not in table_names:
         return
     task_columns = {column["name"] for column in inspector.get_columns("tasks")}

@@ -24,9 +24,39 @@
   </section>
 
   <section class="panel users-list-panel">
-    <div class="table-wrap"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الدور</th><th>الحالة</th><th></th></tr></thead><tbody>
-    {% for item in users %}<tr><td data-label="الاسم">{{ item.full_name }}</td><td data-label="البريد">{{ item.email }}</td><td data-label="الهاتف">{{ item.phone or '-' }}</td><td data-label="الدور">{{ role_labels.get(item.role, item.role) }}</td><td data-label="الحالة">{{ 'نشط' if item.is_active else 'معطل' }}</td><td data-label="الإجراء"><div class="actions"><a class="btn btn-secondary" href="/users/{{ item.id }}/edit">تعديل</a><form class="inline-form" method="post" action="/users/{{ item.id }}/reset-password"><button class="btn btn-secondary" data-confirm="توليد كلمة مرور مؤقتة جديدة لهذا المستخدم؟ سيتم إلغاء كلمة المرور السابقة." type="submit">كلمة مؤقتة</button></form></div></td></tr>{% endfor %}
-    </tbody></table></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>الاسم</th><th>البريد</th><th>الهاتف</th><th>الدور</th><th>الحالة</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for item in users %}
+            <tr>
+              <td data-label="الاسم">{{ item.full_name }}</td>
+              <td data-label="البريد">{{ item.email }}</td>
+              <td data-label="الهاتف">{{ item.phone or '-' }}</td>
+              <td data-label="الدور">{{ role_labels.get(item.role, item.role) }}</td>
+              <td data-label="الحالة">{{ 'نشط' if item.is_active else 'معطل' }}</td>
+              <td data-label="الإجراء">
+                <div class="actions">
+                  <a class="btn btn-secondary" href="/users/{{ item.id }}/edit">تعديل</a>
+                  <form class="inline-form" method="post" action="/users/{{ item.id }}/reset-password">
+                    <button class="btn btn-secondary" data-confirm="توليد كلمة مرور مؤقتة جديدة لهذا المستخدم؟ سيتم إلغاء كلمة المرور السابقة." type="submit">كلمة مؤقتة</button>
+                  </form>
+                  {% if item.id != user.id %}
+                    <form class="inline-form" method="post" action="/users/{{ item.id }}/delete">
+                      <button class="btn btn-danger" data-confirm="تأكيد حذف هذا المستخدم؟ سيتم تعطيله وإخفاؤه من قائمة المستخدمين." type="submit">حذف</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6">لا توجد بيانات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </section>
 </div>
 {% endblock %}

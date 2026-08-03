@@ -1,0 +1,20 @@
+{% if pagination and pagination.total > pagination.per_page %}
+  <div class="pagination-bar">
+    <div class="muted">
+      {% if pagination.show_all %}
+        عرض كل النتائج: {{ pagination.total }}
+      {% else %}
+        صفحة {{ pagination.page }} من {{ pagination.total_pages }}
+      {% endif %}
+    </div>
+    <div class="actions">
+      {% if pagination.show_all %}
+        <a class="btn btn-secondary" href="{{ pagination.paged_url }}">عرض صفحات</a>
+      {% else %}
+        <a class="btn btn-secondary {% if not pagination.has_previous %}disabled-link{% endif %}" href="{{ pagination.previous_url }}">السابق</a>
+        <a class="btn btn-secondary {% if not pagination.has_next %}disabled-link{% endif %}" href="{{ pagination.next_url }}">التالي</a>
+        <a class="btn btn-primary" href="{{ pagination.all_url }}">عرض الكل</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

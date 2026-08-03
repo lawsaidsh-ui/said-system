@@ -25,6 +25,7 @@ class User(TimestampMixin, Base):
     role: Mapped[str] = mapped_column(String(30), index=True, nullable=False, default="viewer")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     assigned_matters: Mapped[list["Matter"]] = relationship(
         back_populates="assigned_lawyer", foreign_keys="Matter.assigned_lawyer_id"
