@@ -60,7 +60,17 @@ def matters_index(
     if case_type:
         stmt = stmt.where(Matter.case_type.ilike(f"%{case_type}%"))
     matters = db.scalars(stmt.order_by(Matter.created_at.desc())).all()
-    return templates.TemplateResponse("matters/index.html", {"request": request, "user": user, "matters": matters, **get_form_context(db), "filters": {"q": q or "", "status": status or "", "lawyer_id": lawyer_id or "", "court": court or "", "case_type": case_type or ""}})
+    context = get_form_context(db)
+    context["matters"] = matters
+    context["matter_count"] = len(matters)
+    context["filters"] = {
+        "q": q or "",
+        "status": status or "",
+        "lawyer_id": lawyer_id or "",
+        "court": court or "",
+        "case_type": case_type or "",
+    }
+    return templates.TemplateResponse("matters/index.html", {"request": request, "user": user, **context})
 
 
 @router.get("/new")

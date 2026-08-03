@@ -10,6 +10,12 @@
     <button class="btn btn-primary" type="submit">تصفية</button>
   </form>
 </section>
-<section class="panel clients-list-panel">{% include "partials/client_table.html" %}</section>
+<section class="panel clients-list-panel">
+  <div class="section-head">
+    <h3 class="section-title mb-0">العملاء المعروضون</h3>
+    <span class="muted">{{ client_count }} عميل</span>
+  </div>
+  {% include "partials/client_table.html" %}
+</section>
 </div>
 {% endblock %}

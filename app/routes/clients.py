@@ -25,7 +25,17 @@ def clients_index(
     if client_type:
         stmt = stmt.where(Client.client_type == client_type)
     clients = db.scalars(stmt.order_by(Client.created_at.desc())).all()
-    return templates.TemplateResponse("clients/index.html", {"request": request, "user": user, "clients": clients, "q": q or "", "client_type": client_type or ""})
+    return templates.TemplateResponse(
+        "clients/index.html",
+        {
+            "request": request,
+            "user": user,
+            "clients": clients,
+            "client_count": len(clients),
+            "q": q or "",
+            "client_type": client_type or "",
+        },
+    )
 
 
 @router.get("/new")
