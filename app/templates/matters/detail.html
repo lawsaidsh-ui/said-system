@@ -24,7 +24,31 @@
 </div>
 <section class="panel" data-tab-panel="sessions"><h3 class="section-title">الجلسات</h3>{% set sessions = matter.sessions %}{% include "partials/session_table.html" %}</section>
 <section class="panel hidden" data-tab-panel="tasks"><h3 class="section-title">المهام</h3>{% set tasks = matter.tasks %}{% include "partials/task_table.html" %}</section>
-<section class="panel hidden" data-tab-panel="documents"><h3 class="section-title">المستندات</h3><div class="table-wrap"><table><tr><th>العنوان</th><th>النوع</th><th>رفعه</th><th>الملف</th></tr>{% for doc in matter.documents %}<tr><td>{{ doc.title }}</td><td>{{ doc.document_type or '-' }}</td><td>{{ doc.uploaded_by.full_name if doc.uploaded_by else '-' }}</td><td><a class="btn btn-secondary" href="{{ doc.file_url }}">فتح</a></td></tr>{% else %}<tr><td colspan="4">لا توجد مستندات.</td></tr>{% endfor %}</table></div></section>
+<section class="panel hidden" data-tab-panel="documents">
+  <div class="section-head">
+    <h3 class="section-title mb-0">المستندات</h3>
+  </div>
+  {% if user.role in ["admin", "lawyer", "secretary", "data_entry"] %}
+    <form class="form-grid mb-4" method="post" action="/matters/{{ matter.id }}/documents" enctype="multipart/form-data">
+      <div class="field"><label>العنوان</label><input class="input" name="title" required placeholder="مثال: صحيفة الدعوى"></div>
+      <div class="field"><label>التصنيف</label><input class="input" name="document_type" placeholder="مذكرة، حكم، وكالة، مستند"></div>
+      <div class="field"><label>الملف</label><input class="input" type="file" name="file" required></div>
+      <label class="field flex items-center gap-2 mt-7"><input type="checkbox" name="is_confidential" value="1"> مستند سري</label>
+      <div class="field full"><label>ملاحظات</label><textarea name="notes"></textarea></div>
+      <div class="full"><button class="btn btn-primary" data-confirm="تأكيد رفع المستند لهذه القضية؟" type="submit">إرفاق مستند</button></div>
+    </form>
+  {% endif %}
+  <div class="table-wrap">
+    <table>
+      <tr><th>العنوان</th><th>النوع</th><th>رفعه</th><th>الملف</th></tr>
+      {% for doc in matter_documents %}
+        <tr><td>{{ doc.title }}</td><td>{{ doc.document_type or '-' }}</td><td>{{ doc.uploaded_by.full_name if doc.uploaded_by else '-' }}</td><td><a class="btn btn-secondary" href="{{ doc.file_url }}">فتح</a></td></tr>
+      {% else %}
+        <tr><td colspan="4">لا توجد مستندات.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
 <section class="panel hidden" data-tab-panel="invoices"><h3 class="section-title">الفواتير</h3><div class="table-wrap"><table><tr><th>الفاتورة</th><th>الإجمالي</th><th>الحالة</th></tr>{% for invoice in matter.invoices %}<tr><td><a href="/invoices/{{ invoice.id }}">{{ invoice.invoice_number }}</a></td><td>{{ invoice.total_amount }}</td><td><span class="badge {{ badge_class(invoice.status) }}">{{ invoice_statuses.get(invoice.status, invoice.status) }}</span></td></tr>{% else %}<tr><td colspan="3">لا توجد فواتير.</td></tr>{% endfor %}</table></div></section>
 {% if user.role == "admin" %}
   <section class="panel">

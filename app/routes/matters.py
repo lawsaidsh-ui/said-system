@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import Client, Document, Matter, User
-from app.routes.helpers import find_similar_client, get_form_context, int_or_none, none_if_empty, pagination_context, parse_date, parse_decimal
+from app.routes.helpers import can_see_document, find_similar_client, get_form_context, int_or_none, none_if_empty, pagination_context, parse_date, parse_decimal, save_upload
 from app.services.audit import audit_logs_for_targets, log_action
 from app.services.auth import ensure_role, get_current_user
 from app.services.tasks import create_matter_status_change_task, generate_automatic_tasks
@@ -389,16 +389,68 @@ def matter_detail(request: Request, matter_id: int, db: Session = Depends(get_db
         )
     )
     audit_logs = []
+    matter_documents = [document for document in matter.documents if can_see_document(user, document)]
     if user.role == "admin":
-        document_ids = [document.id for document in matter.documents]
+        document_ids = [document.id for document in matter_documents]
         audit_logs = audit_logs_for_targets(
             db,
             [("matter", matter.id)] + [("document", document_id) for document_id in document_ids],
         )
     return templates.TemplateResponse(
         "matters/detail.html",
-        {"request": request, "user": user, "matter": matter, "audit_logs": audit_logs},
+        {"request": request, "user": user, "matter": matter, "matter_documents": matter_documents, "audit_logs": audit_logs},
     )
+
+
+@router.post("/{matter_id}/documents")
+async def matter_document_upload(
+    request: Request,
+    matter_id: int,
+    title: str = Form(...),
+    document_type: str = Form(""),
+    notes: str = Form(""),
+    is_confidential: str | None = Form(None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    ensure_role(user, {"lawyer", "secretary", "data_entry"})
+    matter = db.get(Matter, matter_id)
+    if not matter:
+        return RedirectResponse("/matters", status_code=303)
+    file_url, file_name, file_size, mime_type = await save_upload(file)
+    document = Document(
+        title=title,
+        document_type=none_if_empty(document_type),
+        client_id=matter.client_id,
+        matter_id=matter.id,
+        uploaded_by_id=user.id,
+        file_url=file_url,
+        file_name=file_name,
+        file_size=file_size,
+        mime_type=mime_type,
+        notes=none_if_empty(notes),
+        is_confidential=bool(is_confidential),
+    )
+    db.add(document)
+    db.flush()
+    log_action(
+        db,
+        user=user,
+        action="upload_document",
+        entity_type="document",
+        entity_id=document.id,
+        new_value={
+            "title": title,
+            "file_name": file_name,
+            "client_id": document.client_id,
+            "matter_id": document.matter_id,
+            "source": "matter_detail",
+        },
+        request=request,
+    )
+    db.commit()
+    return RedirectResponse(f"/matters/{matter.id}#documents", status_code=303)
 
 
 @router.get("/{matter_id}/edit")
