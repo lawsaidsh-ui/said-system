@@ -11,6 +11,18 @@ DATE_QUALITY_TABLES = {
 }
 
 
+def _datetime_type(engine: Engine) -> str:
+    if engine.dialect.name == "postgresql":
+        return "TIMESTAMP WITH TIME ZONE"
+    return "DATETIME"
+
+
+def _boolean_default(engine: Engine) -> str:
+    if engine.dialect.name == "postgresql":
+        return "true"
+    return "1"
+
+
 def _ensure_date_quality_columns(engine: Engine, table_names: set[str]) -> None:
     inspector = inspect(engine)
     with engine.begin() as conn:
@@ -28,18 +40,20 @@ def _ensure_date_quality_columns(engine: Engine, table_names: set[str]) -> None:
 def ensure_runtime_schema(engine: Engine) -> None:
     inspector = inspect(engine)
     table_names = set(inspector.get_table_names())
+    datetime_type = _datetime_type(engine)
+    boolean_default = _boolean_default(engine)
     with engine.begin() as conn:
         conn.execute(
             text(
-                """
+                f"""
                 CREATE TABLE IF NOT EXISTS whatsapp_templates (
                     id INTEGER PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
                     template_type VARCHAR(80) NOT NULL,
                     body TEXT NOT NULL,
-                    is_active BOOLEAN NOT NULL DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    is_active BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    created_at {datetime_type} DEFAULT CURRENT_TIMESTAMP,
+                    updated_at {datetime_type} DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
@@ -47,7 +61,7 @@ def ensure_runtime_schema(engine: Engine) -> None:
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_whatsapp_templates_template_type ON whatsapp_templates (template_type)"))
         conn.execute(
             text(
-                """
+                f"""
                 CREATE TABLE IF NOT EXISTS whatsapp_logs (
                     id INTEGER PRIMARY KEY,
                     client_id INTEGER,
@@ -61,7 +75,7 @@ def ensure_runtime_schema(engine: Engine) -> None:
                     source_type VARCHAR(40),
                     source_id INTEGER,
                     status VARCHAR(40) DEFAULT 'تم الإلغاء',
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at {datetime_type} DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
@@ -77,7 +91,7 @@ def ensure_runtime_schema(engine: Engine) -> None:
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_whatsapp_logs_status ON whatsapp_logs (status)"))
         conn.execute(
             text(
-                """
+                f"""
                 CREATE TABLE IF NOT EXISTS fixed_monthly_expenses (
                     id INTEGER PRIMARY KEY,
                     title VARCHAR(255) NOT NULL,
@@ -87,9 +101,9 @@ def ensure_runtime_schema(engine: Engine) -> None:
                     payment_method VARCHAR(40),
                     vendor_name VARCHAR(255),
                     notes TEXT,
-                    is_active BOOLEAN NOT NULL DEFAULT 1,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    is_active BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    created_at {datetime_type} DEFAULT CURRENT_TIMESTAMP,
+                    updated_at {datetime_type} DEFAULT CURRENT_TIMESTAMP
                 )
                 """
             )
@@ -103,7 +117,7 @@ def ensure_runtime_schema(engine: Engine) -> None:
         user_columns = {column["name"] for column in inspector.get_columns("users")}
         with engine.begin() as conn:
             if "deleted_at" not in user_columns:
-                conn.execute(text("ALTER TABLE users ADD COLUMN deleted_at DATETIME"))
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN deleted_at {datetime_type}"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_users_deleted_at ON users (deleted_at)"))
 
     if "tasks" not in table_names:
@@ -116,7 +130,7 @@ def ensure_runtime_schema(engine: Engine) -> None:
         "notes": "ALTER TABLE tasks ADD COLUMN notes TEXT",
         "source": "ALTER TABLE tasks ADD COLUMN source VARCHAR(40) NOT NULL DEFAULT 'manual'",
         "source_key": "ALTER TABLE tasks ADD COLUMN source_key VARCHAR(180)",
-        "completed_at": "ALTER TABLE tasks ADD COLUMN completed_at DATETIME",
+        "completed_at": f"ALTER TABLE tasks ADD COLUMN completed_at {datetime_type}",
     }
     with engine.begin() as conn:
         for column_name, sql in additions.items():
@@ -159,7 +173,7 @@ def ensure_runtime_schema(engine: Engine) -> None:
     case_fee_additions = {
         "group_key": "ALTER TABLE case_fees ADD COLUMN group_key VARCHAR(80)",
         "group_total_amount": "ALTER TABLE case_fees ADD COLUMN group_total_amount NUMERIC(12, 2)",
-        "is_group_primary": "ALTER TABLE case_fees ADD COLUMN is_group_primary BOOLEAN NOT NULL DEFAULT 1",
+        "is_group_primary": f"ALTER TABLE case_fees ADD COLUMN is_group_primary BOOLEAN NOT NULL DEFAULT {boolean_default}",
     }
     with engine.begin() as conn:
         for column_name, sql in case_fee_additions.items():

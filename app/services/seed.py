@@ -63,8 +63,6 @@ def seed_database(db: Session) -> None:
         ensure_office_setting(db, key="invoice_footer", value="شكراً لثقتكم بمكتب سعيد الشبيبي للمحاماة.", description="نص أسفل الفاتورة")
         db.commit()
         seed_accounting_defaults(db)
-        seed_accounting_samples(db)
-        seed_fixed_monthly_expenses(db)
         return
 
     admin = User(
