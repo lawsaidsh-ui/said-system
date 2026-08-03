@@ -216,6 +216,17 @@ td { font-size: 14px; }
 .documents-page .page-title, .documents-page .panel { margin-bottom: 0; }
 .documents-page .documents-list-panel { overflow: hidden; }
 
+/* Forms */
+.forms-page { display: grid; gap: 18px; min-width: 0; }
+.forms-page .panel { margin-bottom: 0; }
+.forms-intro p { margin: 0; line-height: 1.8; }
+.forms-group { overflow: hidden; }
+.template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.template-card { border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.template-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.template-card h4 { margin: 0; color: var(--navy); font-size: 16px; font-weight: 800; line-height: 1.5; }
+.template-text { min-height: 260px; line-height: 1.85; white-space: pre-wrap; background: #fff; font-family: inherit; color: #162033; }
+
 /* Invoices */
 .invoices-page { display: grid; gap: 18px; min-width: 0; }
 .invoices-page .panel { margin-bottom: 0; }
@@ -905,6 +916,14 @@ td { font-size: 14px; }
   .documents-page td[colspan] { display: block; text-align: center; color: var(--muted); }
   .documents-page td[colspan]::before { display: none; }
   .documents-page td[data-label="الملف"] .btn { width: 100%; min-width: 0; }
+
+  .forms-page { gap: 12px; }
+  .forms-page .panel { padding: 14px; }
+  .template-grid { grid-template-columns: 1fr; gap: 12px; }
+  .template-card { padding: 12px; }
+  .template-card-head { align-items: stretch; flex-direction: column; }
+  .template-card-head .btn { width: 100%; }
+  .template-text { min-height: 300px; }
 
   .invoices-page { gap: 12px; }
   .invoices-page .panel { padding: 14px; }

@@ -1,4 +1,10 @@
 document.addEventListener("click", (event) => {
+  const copyTemplateButton = event.target.closest("[data-copy-template]");
+  if (copyTemplateButton) {
+    copyTemplateText(copyTemplateButton);
+    return;
+  }
+
   const overdueWhatsAppButton = event.target.closest("[data-overdue-whatsapp]");
   if (overdueWhatsAppButton) {
     openOverdueWhatsAppReminder(overdueWhatsAppButton);
@@ -45,6 +51,31 @@ document.addEventListener("click", (event) => {
     event.preventDefault();
   }
 });
+
+async function copyTemplateText(button) {
+  const target = document.querySelector(button.dataset.copyTemplate);
+  if (!target) return;
+  const text = target.value || target.textContent || "";
+  const originalText = button.textContent;
+
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      target.focus();
+      target.select();
+      document.execCommand("copy");
+      target.blur();
+    }
+    button.textContent = "تم النسخ";
+  } catch (error) {
+    button.textContent = "تعذر النسخ";
+  }
+
+  window.setTimeout(() => {
+    button.textContent = originalText;
+  }, 1800);
+}
 
 document.addEventListener("click", (event) => {
   const opener = event.target.closest("[data-open-dialog]");
