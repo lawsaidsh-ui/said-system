@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
@@ -21,6 +21,12 @@ TASK_SETTING_DEFAULTS = {
     "task_notify_manager_overdue": "1",
     "task_overdue_manager_threshold": "5",
 }
+
+
+def as_utc(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def task_setting(db: Session, key: str) -> str:
@@ -291,7 +297,7 @@ def generate_matter_tasks(db: Session, today: date) -> None:
         .options(selectinload(Matter.client), selectinload(Matter.assigned_lawyer), selectinload(Matter.documents), selectinload(Matter.sessions))
         .where(Matter.status.in_(OPEN_MATTER_STATUSES))
     ).all()
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     for matter in matters:
         opened = matter.opened_at or (matter.created_at.date() if matter.created_at else today)
         lawyer_id = matter.assigned_lawyer_id or (default_lawyer.id if default_lawyer else None)
@@ -321,7 +327,7 @@ def generate_matter_tasks(db: Session, today: date) -> None:
                 matter_id=matter.id,
                 client_id=matter.client_id,
             )
-        if matter.updated_at and matter.updated_at < now - timedelta(hours=48):
+        if matter.updated_at and as_utc(matter.updated_at) < now - timedelta(hours=48):
             create_task_once(
                 db,
                 source_key=f"matter_no_update_48h:{matter.id}:{today.isoformat()}",
@@ -497,7 +503,7 @@ def generate_manager_tasks(db: Session, today: date) -> None:
             due_date=today,
             priority="high",
         )
-    stale_cutoff = datetime.now() - timedelta(days=14)
+    stale_cutoff = datetime.now(timezone.utc) - timedelta(days=14)
     matters = db.scalars(select(Matter).where(Matter.status.in_(OPEN_MATTER_STATUSES), Matter.updated_at < stale_cutoff)).all()
     for matter in matters:
         create_task_once(
