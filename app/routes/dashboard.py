@@ -124,9 +124,9 @@ def admin_dashboard(db: Session, today: date, week_end: date) -> dict:
             )
             or 0,
         },
-        "recent_clients": db.scalars(select(Client).order_by(Client.created_at.desc()).limit(5)).all(),
+        "recent_clients": db.scalars(select(Client).order_by(Client.created_at.desc())).all(),
         "recent_matters": db.scalars(
-            select(Matter).options(selectinload(Matter.client), selectinload(Matter.assigned_lawyer)).order_by(Matter.created_at.desc()).limit(5)
+            select(Matter).options(selectinload(Matter.client), selectinload(Matter.assigned_lawyer)).order_by(Matter.created_at.desc())
         ).all(),
         "priority_tasks": db.scalars(
             select(Task)
@@ -187,7 +187,6 @@ def lawyer_dashboard(db: Session, user: User, today: date, week_end: date) -> di
             .options(selectinload(Matter.client))
             .where(assigned_filter)
             .order_by(Matter.priority.desc(), Matter.created_at.desc())
-            .limit(8)
         ).all(),
         "my_sessions": db.scalars(
             select(CourtSession)
@@ -215,7 +214,7 @@ def secretary_dashboard(db: Session, user: User, today: date, week_end: date) ->
             "new_consultations": db.scalar(select(func.count(Consultation.id)).where(Consultation.status.in_(["new", "assigned"]))) or 0,
             "my_pending_tasks": db.scalar(select(func.count(Task.id)).where(Task.assigned_to_id == user.id, Task.status != "completed")) or 0,
         },
-        "recent_clients": db.scalars(select(Client).order_by(Client.created_at.desc()).limit(8)).all(),
+        "recent_clients": db.scalars(select(Client).order_by(Client.created_at.desc())).all(),
         "upcoming_sessions": db.scalars(
             select(CourtSession)
             .options(selectinload(CourtSession.matter).selectinload(Matter.client))
@@ -275,12 +274,11 @@ def data_entry_dashboard(db: Session, user: User, today: date, week_end: date) -
             "my_pending_tasks": db.scalar(select(func.count(Task.id)).where(Task.assigned_to_id == user.id, Task.status != "completed")) or 0,
             "new_consultations": db.scalar(select(func.count(Consultation.id)).where(Consultation.status.in_(["new", "assigned"]))) or 0,
         },
-        "recent_clients": db.scalars(select(Client).order_by(Client.created_at.desc()).limit(8)).all(),
+        "recent_clients": db.scalars(select(Client).order_by(Client.created_at.desc())).all(),
         "recent_matters": db.scalars(
             select(Matter)
             .options(selectinload(Matter.client), selectinload(Matter.assigned_lawyer))
             .order_by(Matter.created_at.desc())
-            .limit(8)
         ).all(),
         "upcoming_sessions": db.scalars(
             select(CourtSession)
@@ -313,7 +311,7 @@ def viewer_dashboard(db: Session, today: date, week_end: date) -> dict:
             "week_sessions": db.scalar(select(func.count(CourtSession.id)).where(CourtSession.session_date.between(today, week_end))) or 0,
             "unpaid_invoices": db.scalar(select(func.count(Invoice.id)).where(Invoice.status.in_(["unpaid", "partially_paid"]))) or 0,
         },
-        "recent_matters": db.scalars(select(Matter).options(selectinload(Matter.client)).order_by(Matter.created_at.desc()).limit(8)).all(),
+        "recent_matters": db.scalars(select(Matter).options(selectinload(Matter.client)).order_by(Matter.created_at.desc())).all(),
         "upcoming_sessions": db.scalars(
             select(CourtSession).options(selectinload(CourtSession.matter)).where(CourtSession.session_date >= today).order_by(CourtSession.session_date).limit(8)
         ).all(),
