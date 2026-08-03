@@ -39,9 +39,9 @@ def session_new(request: Request, db: Session = Depends(get_db), user: User = De
 
 
 @router.post("/new")
-def session_create(request: Request, matter_id: int = Form(...), session_date: str = Form(...), session_time: str = Form(""), court_name: str = Form(...), hall_number: str = Form(""), judge_name: str = Form(""), session_status: str = Form("scheduled"), decision_summary: str = Form(""), next_action: str = Form(""), next_session_date: str = Form(""), notes: str = Form(""), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def session_create(request: Request, matter_id: int = Form(...), session_date: str = Form(...), session_time: str = Form(""), court_name: str = Form(...), hall_number: str = Form(""), judge_name: str = Form(""), session_status: str = Form("scheduled"), decision_type: str = Form(""), decision_summary: str = Form(""), next_action: str = Form(""), next_session_date: str = Form(""), notes: str = Form(""), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     ensure_role(user, {"lawyer", "secretary", "data_entry"})
-    item = CourtSession(matter_id=matter_id, session_date=parse_date(session_date), session_time=parse_time(session_time), court_name=court_name, hall_number=none_if_empty(hall_number), judge_name=none_if_empty(judge_name), session_status=session_status, decision_summary=none_if_empty(decision_summary), next_action=none_if_empty(next_action), next_session_date=parse_date(next_session_date), notes=none_if_empty(notes))
+    item = CourtSession(matter_id=matter_id, session_date=parse_date(session_date), session_time=parse_time(session_time), court_name=court_name, hall_number=none_if_empty(hall_number), judge_name=none_if_empty(judge_name), session_status=session_status, decision_type=none_if_empty(decision_type), decision_summary=none_if_empty(decision_summary), next_action=none_if_empty(next_action), next_session_date=parse_date(next_session_date), notes=none_if_empty(notes))
     db.add(item)
     db.flush()
     log_action(db, user=user, action="create_session", entity_type="court_session", entity_id=item.id, new_value={"matter_id": matter_id}, request=request)
@@ -57,7 +57,7 @@ def session_edit(request: Request, session_id: int, db: Session = Depends(get_db
 
 
 @router.post("/{session_id}/edit")
-def session_update(request: Request, session_id: int, matter_id: int = Form(...), session_date: str = Form(...), session_time: str = Form(""), court_name: str = Form(...), hall_number: str = Form(""), judge_name: str = Form(""), session_status: str = Form("scheduled"), decision_summary: str = Form(""), next_action: str = Form(""), next_session_date: str = Form(""), notes: str = Form(""), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def session_update(request: Request, session_id: int, matter_id: int = Form(...), session_date: str = Form(...), session_time: str = Form(""), court_name: str = Form(...), hall_number: str = Form(""), judge_name: str = Form(""), session_status: str = Form("scheduled"), decision_type: str = Form(""), decision_summary: str = Form(""), next_action: str = Form(""), next_session_date: str = Form(""), notes: str = Form(""), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     ensure_role(user, {"lawyer", "secretary", "data_entry"})
     item = db.get(CourtSession, session_id)
     old = {"session_date": item.session_date, "status": item.session_status}
@@ -68,6 +68,7 @@ def session_update(request: Request, session_id: int, matter_id: int = Form(...)
     item.hall_number = none_if_empty(hall_number)
     item.judge_name = none_if_empty(judge_name)
     item.session_status = session_status
+    item.decision_type = none_if_empty(decision_type)
     item.decision_summary = none_if_empty(decision_summary)
     item.next_action = none_if_empty(next_action)
     item.next_session_date = parse_date(next_session_date)

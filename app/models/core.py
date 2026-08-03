@@ -156,6 +156,7 @@ class CourtSession(TimestampMixin, Base):
     hall_number: Mapped[str | None] = mapped_column(String(80))
     judge_name: Mapped[str | None] = mapped_column(String(255))
     session_status: Mapped[str] = mapped_column(String(40), index=True, default="scheduled")
+    decision_type: Mapped[str | None] = mapped_column(String(40), index=True)
     decision_summary: Mapped[str | None] = mapped_column(Text)
     next_action: Mapped[str | None] = mapped_column(Text)
     next_session_date: Mapped[date | None] = mapped_column(Date)

@@ -24,6 +24,11 @@ SESSION_STATUSES = {
     "postponed": "مؤجلة",
     "cancelled": "ملغاة",
 }
+SESSION_DECISIONS = {
+    "judgment": "الحكم",
+    "another_session": "جلسة أخرى",
+    "expert_assignment": "ندب خبير",
+}
 TASK_STATUSES = {
     "new": "جديدة",
     "pending": "معلقة",

@@ -120,6 +120,13 @@ def ensure_runtime_schema(engine: Engine) -> None:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN deleted_at {datetime_type}"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_users_deleted_at ON users (deleted_at)"))
 
+    if "court_sessions" in table_names:
+        session_columns = {column["name"] for column in inspector.get_columns("court_sessions")}
+        with engine.begin() as conn:
+            if "decision_type" not in session_columns:
+                conn.execute(text("ALTER TABLE court_sessions ADD COLUMN decision_type VARCHAR(40)"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_court_sessions_decision_type ON court_sessions (decision_type)"))
+
     if "tasks" not in table_names:
         return
     task_columns = {column["name"] for column in inspector.get_columns("tasks")}
