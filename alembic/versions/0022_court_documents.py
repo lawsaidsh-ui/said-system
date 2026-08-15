@@ -42,7 +42,7 @@ def upgrade() -> None:
     if "court_document_templates" not in tables:
         op.create_table(
             "court_document_templates",
-            sa.Column("id", sa.Integer(), primary_key=True),
+            sa.Column("id", sa.Integer(), sa.Identity(always=False), primary_key=True),
             sa.Column("name", sa.String(length=255), nullable=False),
             sa.Column("description", sa.Text(), nullable=True),
             sa.Column("category", sa.String(length=120), nullable=False),
@@ -70,7 +70,7 @@ def upgrade() -> None:
     if "generated_court_documents" not in tables:
         op.create_table(
             "generated_court_documents",
-            sa.Column("id", sa.Integer(), primary_key=True),
+            sa.Column("id", sa.Integer(), sa.Identity(always=False), primary_key=True),
             sa.Column("reference_number", sa.String(length=120), nullable=True),
             sa.Column("template_id", sa.Integer(), sa.ForeignKey("court_document_templates.id"), nullable=True),
             sa.Column("template_version", sa.Integer(), nullable=False, server_default="1"),
