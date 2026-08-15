@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}أرشيف الخطابات{% endblock %}
+{% block content %}
+<div class="court-docs-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">أرشيف الخطابات الصادرة</h2>
+    <a class="btn btn-primary" href="/court-templates">إنشاء خطاب</a>
+  </div>
+  <form class="panel filters" method="get">
+    <div class="field"><label>بحث</label><input class="input" name="q" value="{{ q }}" placeholder="رقم مرجعي أو موضوع أو جهة"></div>
+    <div class="field"><label>الحالة</label><select name="status"><option value="">كل الحالات</option>{% for key,label_text in [('draft','مسودة'),('pending_approval','بانتظار الاعتماد'),('issued','معتمد'),('revoked','ملغى')] %}<option value="{{ key }}" {% if status==key %}selected{% endif %}>{{ label_text }}</option>{% endfor %}</select></div>
+    <button class="btn btn-primary" type="submit">تصفية</button>
+    <a class="btn btn-secondary" href="/court-documents">مسح</a>
+  </form>
+  <section class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الرقم</th><th>الخطاب</th><th>العميل</th><th>القضية</th><th>الجهة</th><th>المستخدم</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+        <tbody>
+        {% for doc in documents %}
+          <tr>
+            <td>{{ doc.reference_number or 'مسودة' }}</td>
+            <td><strong>{{ doc.subject }}</strong><br><span class="muted">{{ doc.template.name if doc.template else '' }}</span></td>
+            <td>{% if doc.client %}<a href="/clients/{{ doc.client.id }}">{{ doc.client.full_name }}</a>{% else %}-{% endif %}</td>
+            <td>{% if doc.matter %}<a href="/matters/{{ doc.matter.id }}">{{ doc.matter.case_number }}</a>{% else %}-{% endif %}</td>
+            <td>{{ doc.court_name or '-' }}</td>
+            <td>{{ doc.issued_by.full_name if doc.issued_by else '-' }}</td>
+            <td><span class="badge {{ 'badge-green' if doc.status=='issued' else 'badge-red' if doc.status=='revoked' else 'badge-yellow' }}">{{ {'draft':'مسودة','pending_approval':'بانتظار الاعتماد','issued':'معتمد','revoked':'ملغى'}.get(doc.status, doc.status) }}</span></td>
+            <td class="actions">
+              <a class="btn btn-secondary" target="_blank" href="/court-documents/{{ doc.id }}/preview">معاينة</a>
+              {% if doc.pdf_path %}<a class="btn btn-secondary" href="/court-documents/{{ doc.id }}/download">تنزيل PDF</a>{% endif %}
+              {% if doc.status != 'issued' and doc.status != 'revoked' %}
+                <form method="post" action="/court-documents/{{ doc.id }}/issue"><button class="btn btn-primary" data-confirm="سيتم إصدار هذا المستند باسمك وإضافة توقيعك المحفوظ. هل تؤكد اعتماد الخطاب؟" type="submit">اعتماد وإصدار PDF</button></form>
+              {% endif %}
+              {% if user.role == 'admin' and doc.status == 'issued' %}
+                <form method="post" action="/court-documents/{{ doc.id }}/revoke"><input class="input" name="reason" required placeholder="سبب الإلغاء"><button class="btn btn-danger" type="submit">إلغاء</button></form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="muted">لا توجد خطابات.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

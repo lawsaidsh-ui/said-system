@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}إنشاء خطاب{% endblock %}
+{% block content %}
+<div class="court-docs-page">
+  <h2 class="page-title">إنشاء خطاب: {{ item.name }}</h2>
+  <div class="steps-strip">اختيار النموذج ← اختيار العميل والقضية ← تعبئة البيانات ← المعاينة ← الاعتماد والإصدار</div>
+  <form class="panel form-grid court-template-form" method="post">
+    <div class="field"><label>العميل</label><select name="client_id"><option value="">اختر العميل</option>{% for client in clients %}<option value="{{ client.id }}">{{ client.full_name }}</option>{% endfor %}</select></div>
+    <div class="field"><label>القضية</label><select name="matter_id"><option value="">اختر القضية</option>{% for matter in matters %}<option value="{{ matter.id }}">{{ matter.case_number }} - {{ matter.title }}</option>{% endfor %}</select></div>
+    <div class="field"><label>المحكمة أو الجهة</label><input class="input" name="court_name" value="{{ item.target_entity or '' }}"></div>
+    <div class="field"><label>الدائرة أو القسم</label><input class="input" name="department_name"></div>
+    <div class="field full"><label>موضوع الخطاب</label><input class="input" name="subject" value="{{ item.subject_template }}"></div>
+    <div class="field full">
+      <label>محتوى الخطاب قبل الإصدار</label>
+      <div class="court-editor" contenteditable="true" dir="rtl">{{ item.body_html|safe }}</div>
+      <textarea class="hidden" name="body_html" data-editor-output></textarea>
+    </div>
+    <section class="panel full mb-0">
+      <h3 class="section-title">استكمال المتغيرات عند الحاجة</h3>
+      <div class="form-grid">
+        {% for key,label_text in variables %}
+          <div class="field"><label>{{ label_text }}</label><input class="input" name="var_{{ key }}" placeholder="{{ '{{' ~ key ~ '}}' }}"></div>
+        {% endfor %}
+      </div>
+    </section>
+    <div class="actions full">
+      <button class="btn btn-secondary" name="action" value="draft" type="submit">حفظ كمسودة</button>
+      <button class="btn btn-primary" name="action" value="submit_approval" type="submit">معاينة / إرسال للاعتماد</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

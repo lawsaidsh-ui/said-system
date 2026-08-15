@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -10,6 +10,7 @@ from app.database import get_db
 from app.models import User
 from app.services.audit import log_action
 from app.services.auth import require_roles
+from app.services.court_documents import save_secure_image
 from app.services.security import hash_password
 from app.templating import templates
 
@@ -47,7 +48,7 @@ def user_new(request: Request, user: User = Depends(require_roles("admin"))):
 
 
 @router.post("/new")
-def user_create(
+async def user_create(
     request: Request,
     full_name: str = Form(...),
     email: str = Form(...),
@@ -55,9 +56,15 @@ def user_create(
     password: str = Form(...),
     role: str = Form("viewer"),
     is_active: str | None = Form(None),
+    job_title: str = Form(""),
+    can_issue_signed_letters: str | None = Form(None),
+    can_use_office_stamp: str | None = Form(None),
+    can_update_own_signature: str | None = Form(None),
+    signature_file: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     user: User = Depends(require_roles("admin")),
 ):
+    signature_path = await save_secure_image(signature_file, "user-signatures") if signature_file and signature_file.filename else None
     item = User(
         full_name=full_name,
         email=email,
@@ -65,6 +72,11 @@ def user_create(
         password_hash=hash_password(password),
         role=role,
         is_active=bool(is_active),
+        job_title=job_title or None,
+        signature_path=signature_path,
+        can_issue_signed_letters=bool(can_issue_signed_letters),
+        can_use_office_stamp=bool(can_use_office_stamp),
+        can_update_own_signature=bool(can_update_own_signature),
     )
     db.add(item)
     db.flush()
@@ -87,7 +99,7 @@ def user_edit(request: Request, user_id: int, db: Session = Depends(get_db), use
 
 
 @router.post("/{user_id}/edit")
-def user_update(
+async def user_update(
     request: Request,
     user_id: int,
     full_name: str = Form(...),
@@ -96,6 +108,11 @@ def user_update(
     password: str = Form(""),
     role: str = Form("viewer"),
     is_active: str | None = Form(None),
+    job_title: str = Form(""),
+    can_issue_signed_letters: str | None = Form(None),
+    can_use_office_stamp: str | None = Form(None),
+    can_update_own_signature: str | None = Form(None),
+    signature_file: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     user: User = Depends(require_roles("admin")),
 ):
@@ -106,6 +123,13 @@ def user_update(
     item.phone = phone or None
     item.role = role
     item.is_active = bool(is_active)
+    item.job_title = job_title or None
+    item.can_issue_signed_letters = bool(can_issue_signed_letters)
+    item.can_use_office_stamp = bool(can_use_office_stamp)
+    item.can_update_own_signature = bool(can_update_own_signature)
+    if signature_file and signature_file.filename:
+        item.signature_path = await save_secure_image(signature_file, "user-signatures")
+        log_action(db, user=user, action="change_user_signature", entity_type="user", entity_id=item.id, request=request)
     if password:
         item.password_hash = hash_password(password)
     log_action(

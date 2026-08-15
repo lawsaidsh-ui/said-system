@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}النماذج والخطابات{% endblock %}
+{% block content %}
+<div class="court-docs-page">
+  <div class="page-head">
+    <h2 class="page-title mb-0">النماذج والخطابات القضائية</h2>
+    {% if user.role == 'admin' %}<a class="btn btn-primary" href="/court-templates/new">نموذج جديد</a>{% endif %}
+  </div>
+  <form class="panel filters" method="get">
+    <div class="field"><label>بحث</label><input class="input" name="q" value="{{ q }}" placeholder="اسم النموذج أو الجهة"></div>
+    <div class="field"><label>التصنيف</label><select name="category"><option value="">كل التصنيفات</option>{% for item in categories %}<option value="{{ item }}" {% if category==item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+    <button class="btn btn-primary" type="submit">تصفية</button>
+    <a class="btn btn-secondary" href="/court-templates">مسح</a>
+  </form>
+  <section class="panel">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>النموذج</th><th>النوع</th><th>الجهة</th><th>الحالة</th><th>آخر تعديل</th><th>الإجراء</th></tr></thead>
+        <tbody>
+        {% for item in items %}
+          <tr>
+            <td><strong>{{ item.name }}</strong><br><span class="muted">{{ item.description or '' }}</span></td>
+            <td>{{ item.category }}</td>
+            <td>{{ item.target_entity or '-' }}</td>
+            <td><span class="badge {{ 'badge-green' if item.is_active else 'badge-red' }}">{{ 'فعال' if item.is_active else 'موقوف' }}</span></td>
+            <td>{{ item.updated_at.date() if item.updated_at else '-' }}</td>
+            <td class="actions">
+              <a class="btn btn-primary" href="/court-templates/{{ item.id }}/generate">استخدام</a>
+              <a class="btn btn-secondary" href="/court-templates/{{ item.id }}/preview" target="_blank">معاينة</a>
+              {% if user.role == 'admin' %}
+                <a class="btn btn-secondary" href="/court-templates/{{ item.id }}/edit">تعديل</a>
+                <form method="post" action="/court-templates/{{ item.id }}/delete"><button class="btn btn-danger" data-confirm="إيقاف هذا النموذج؟" type="submit">إيقاف</button></form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="muted">لا توجد نماذج مطابقة.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

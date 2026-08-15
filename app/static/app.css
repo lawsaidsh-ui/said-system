@@ -216,6 +216,36 @@ td { font-size: 14px; }
 .documents-page .page-title, .documents-page .panel { margin-bottom: 0; }
 .documents-page .documents-list-panel { overflow: hidden; }
 
+/* Court documents */
+.court-docs-page { display: grid; gap: 18px; min-width: 0; }
+.court-docs-page .panel,
+.court-docs-page .page-title { margin-bottom: 0; }
+.court-docs-page .filters { grid-template-columns: minmax(220px, 1.4fr) minmax(180px, 1fr) auto auto; }
+.court-editor {
+  min-height: 280px;
+  border: 1px solid #d4d9e2;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+  line-height: 1.9;
+  outline: none;
+}
+.court-editor:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,166,70,.16); }
+.editor-toolbar { margin-bottom: 8px; }
+.variable-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.variable-pills .btn { direction: rtl; }
+.option-grid { display: grid; gap: 8px; align-content: start; }
+.option-grid label { display: flex; align-items: center; gap: 8px; margin: 0; }
+.steps-strip {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-right: 4px solid var(--gold);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: var(--navy);
+  font-weight: 800;
+}
+
 /* Forms */
 .forms-page { display: grid; gap: 18px; min-width: 0; }
 .forms-page .panel { margin-bottom: 0; }

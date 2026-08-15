@@ -1,4 +1,5 @@
 from datetime import time as _time
+import json
 
 from fastapi.templating import Jinja2Templates
 
@@ -28,8 +29,19 @@ def _time12(t: _time) -> str:
     return f"{hour}:{minute} {period}"
 
 
+def _from_json(value: str | None) -> dict:
+    if not value:
+        return {}
+    try:
+        loaded = json.loads(value)
+    except json.JSONDecodeError:
+        return {}
+    return loaded if isinstance(loaded, dict) else {}
+
+
 templates = Jinja2Templates(directory="app/templates")
 templates.env.filters["time12"] = _time12
+templates.env.filters["from_json"] = _from_json
 templates.env.globals.update(
     role_labels=ROLE_LABELS,
     client_types=CLIENT_TYPES,

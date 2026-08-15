@@ -118,7 +118,91 @@ def ensure_runtime_schema(engine: Engine) -> None:
         with engine.begin() as conn:
             if "deleted_at" not in user_columns:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN deleted_at {datetime_type}"))
+            if "job_title" not in user_columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN job_title VARCHAR(255)"))
+            if "signature_path" not in user_columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN signature_path VARCHAR(500)"))
+            if "can_issue_signed_letters" not in user_columns:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN can_issue_signed_letters BOOLEAN NOT NULL DEFAULT {boolean_default}"))
+            if "can_use_office_stamp" not in user_columns:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN can_use_office_stamp BOOLEAN NOT NULL DEFAULT {boolean_default}"))
+            if "can_update_own_signature" not in user_columns:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN can_update_own_signature BOOLEAN NOT NULL DEFAULT {boolean_default}"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS ix_users_deleted_at ON users (deleted_at)"))
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS court_document_templates (
+                    id INTEGER PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    category VARCHAR(120) NOT NULL,
+                    target_entity VARCHAR(255),
+                    subject_template VARCHAR(500) NOT NULL,
+                    body_html TEXT NOT NULL,
+                    variables_schema TEXT,
+                    allowed_roles TEXT,
+                    include_letterhead BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    include_signature BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    include_stamp BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    requires_approval BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    is_active BOOLEAN NOT NULL DEFAULT {boolean_default},
+                    version INTEGER NOT NULL DEFAULT 1,
+                    created_by_id INTEGER,
+                    created_at {datetime_type} DEFAULT CURRENT_TIMESTAMP,
+                    updated_at {datetime_type} DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_court_document_templates_name ON court_document_templates (name)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_court_document_templates_category ON court_document_templates (category)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_court_document_templates_target_entity ON court_document_templates (target_entity)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_court_document_templates_is_active ON court_document_templates (is_active)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_court_document_templates_created_by_id ON court_document_templates (created_by_id)"))
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS generated_court_documents (
+                    id INTEGER PRIMARY KEY,
+                    reference_number VARCHAR(120),
+                    template_id INTEGER,
+                    template_version INTEGER NOT NULL DEFAULT 1,
+                    client_id INTEGER,
+                    matter_id INTEGER,
+                    court_name VARCHAR(255),
+                    department_name VARCHAR(255),
+                    subject VARCHAR(500) NOT NULL,
+                    values_json TEXT,
+                    rendered_html_snapshot TEXT,
+                    template_snapshot TEXT,
+                    signature_snapshot_path VARCHAR(500),
+                    letterhead_snapshot_path VARCHAR(500),
+                    stamp_snapshot_path VARCHAR(500),
+                    pdf_path VARCHAR(500),
+                    status VARCHAR(40) NOT NULL DEFAULT 'draft',
+                    issued_by_id INTEGER,
+                    issued_at {datetime_type},
+                    approved_by_id INTEGER,
+                    approved_at {datetime_type},
+                    revoked_by_id INTEGER,
+                    revoked_at {datetime_type},
+                    revocation_reason TEXT,
+                    created_at {datetime_type} DEFAULT CURRENT_TIMESTAMP,
+                    updated_at {datetime_type} DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_generated_court_documents_reference_number ON generated_court_documents (reference_number)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_generated_court_documents_template_id ON generated_court_documents (template_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_generated_court_documents_client_id ON generated_court_documents (client_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_generated_court_documents_matter_id ON generated_court_documents (matter_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_generated_court_documents_court_name ON generated_court_documents (court_name)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_generated_court_documents_status ON generated_court_documents (status)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_generated_court_documents_issued_by_id ON generated_court_documents (issued_by_id)"))
 
     if "court_sessions" in table_names:
         session_columns = {column["name"] for column in inspector.get_columns("court_sessions")}

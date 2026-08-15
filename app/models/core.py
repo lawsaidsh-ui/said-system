@@ -26,6 +26,11 @@ class User(TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    job_title: Mapped[str | None] = mapped_column(String(255))
+    signature_path: Mapped[str | None] = mapped_column(String(500))
+    can_issue_signed_letters: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    can_use_office_stamp: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    can_update_own_signature: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     assigned_matters: Mapped[list["Matter"]] = relationship(
         back_populates="assigned_lawyer", foreign_keys="Matter.assigned_lawyer_id"
@@ -33,6 +38,8 @@ class User(TimestampMixin, Base):
     assigned_tasks: Mapped[list["Task"]] = relationship(back_populates="assigned_to", foreign_keys="Task.assigned_to_id")
     notifications: Mapped[list["Notification"]] = relationship(back_populates="user", foreign_keys="Notification.user_id")
     whatsapp_logs: Mapped[list["WhatsAppLog"]] = relationship(back_populates="employee", foreign_keys="WhatsAppLog.employee_id")
+    court_templates: Mapped[list["CourtDocumentTemplate"]] = relationship(back_populates="created_by", foreign_keys="CourtDocumentTemplate.created_by_id")
+    issued_court_documents: Mapped[list["GeneratedCourtDocument"]] = relationship(back_populates="issued_by", foreign_keys="GeneratedCourtDocument.issued_by_id")
 
 
 class Client(TimestampMixin, Base):
@@ -232,6 +239,66 @@ class Document(Base):
     matter: Mapped[Matter | None] = relationship(back_populates="documents")
     client: Mapped[Client | None] = relationship(back_populates="documents")
     uploaded_by: Mapped[User | None] = relationship()
+
+
+class CourtDocumentTemplate(TimestampMixin, Base):
+    __tablename__ = "court_document_templates"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    description: Mapped[str | None] = mapped_column(Text)
+    category: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    target_entity: Mapped[str | None] = mapped_column(String(255), index=True)
+    subject_template: Mapped[str] = mapped_column(String(500), nullable=False)
+    body_html: Mapped[str] = mapped_column(Text, nullable=False)
+    variables_schema: Mapped[str | None] = mapped_column(Text)
+    allowed_roles: Mapped[str | None] = mapped_column(Text)
+    include_letterhead: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    include_signature: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    include_stamp: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    requires_approval: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
+
+    created_by: Mapped[User | None] = relationship(back_populates="court_templates", foreign_keys=[created_by_id])
+    generated_documents: Mapped[list["GeneratedCourtDocument"]] = relationship(back_populates="template")
+
+
+class GeneratedCourtDocument(TimestampMixin, Base):
+    __tablename__ = "generated_court_documents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    reference_number: Mapped[str | None] = mapped_column(String(120), unique=True, index=True)
+    template_id: Mapped[int | None] = mapped_column(ForeignKey("court_document_templates.id"), index=True)
+    template_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    client_id: Mapped[int | None] = mapped_column(ForeignKey("clients.id"), index=True)
+    matter_id: Mapped[int | None] = mapped_column(ForeignKey("matters.id"), index=True)
+    court_name: Mapped[str | None] = mapped_column(String(255), index=True)
+    department_name: Mapped[str | None] = mapped_column(String(255))
+    subject: Mapped[str] = mapped_column(String(500), nullable=False)
+    values_json: Mapped[str | None] = mapped_column(Text)
+    rendered_html_snapshot: Mapped[str | None] = mapped_column(Text)
+    template_snapshot: Mapped[str | None] = mapped_column(Text)
+    signature_snapshot_path: Mapped[str | None] = mapped_column(String(500))
+    letterhead_snapshot_path: Mapped[str | None] = mapped_column(String(500))
+    stamp_snapshot_path: Mapped[str | None] = mapped_column(String(500))
+    pdf_path: Mapped[str | None] = mapped_column(String(500))
+    status: Mapped[str] = mapped_column(String(40), nullable=False, default="draft", index=True)
+    issued_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    approved_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revocation_reason: Mapped[str | None] = mapped_column(Text)
+
+    template: Mapped[CourtDocumentTemplate | None] = relationship(back_populates="generated_documents")
+    client: Mapped[Client | None] = relationship()
+    matter: Mapped[Matter | None] = relationship()
+    issued_by: Mapped[User | None] = relationship(back_populates="issued_court_documents", foreign_keys=[issued_by_id])
+    approved_by: Mapped[User | None] = relationship(foreign_keys=[approved_by_id])
+    revoked_by: Mapped[User | None] = relationship(foreign_keys=[revoked_by_id])
 
 
 class Invoice(TimestampMixin, Base):

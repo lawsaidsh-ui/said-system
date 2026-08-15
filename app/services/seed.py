@@ -4,9 +4,10 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import CaseFee, Client, Consultation, CourtSession, Expense, FixedMonthlyExpense, Installment, Invoice, Matter, OfficeSetting, Payment, Task, User
+from app.models import CaseFee, Client, Consultation, CourtDocumentTemplate, CourtSession, Expense, FixedMonthlyExpense, Installment, Invoice, Matter, OfficeSetting, Payment, Task, User
 from app.services.audit import log_action
 from app.services.accounting import seed_accounting_defaults
+from app.services.court_documents import dumps
 from app.services.security import hash_password
 
 
@@ -61,6 +62,8 @@ def seed_database(db: Session) -> None:
         ensure_office_setting(db, key="email", value="info@saeed-law.om", description="البريد الإلكتروني")
         ensure_office_setting(db, key="address", value="مسقط، سلطنة عمان", description="العنوان")
         ensure_office_setting(db, key="invoice_footer", value="شكراً لثقتكم بمكتب سعيد الشبيبي للمحاماة.", description="نص أسفل الفاتورة")
+        ensure_court_letter_defaults(db)
+        seed_court_document_templates(db, active_admin)
         db.commit()
         seed_accounting_defaults(db)
         return
@@ -218,11 +221,57 @@ def seed_database(db: Session) -> None:
         OfficeSetting(key="invoice_footer", value="شكراً لثقتكم بمكتب سعيد الشبيبي للمحاماة.", description="نص أسفل الفاتورة"),
     ]
     db.add_all(settings)
+    ensure_court_letter_defaults(db)
+    seed_court_document_templates(db, admin)
     log_action(db, user=admin, action="seed_database", entity_type="system", new_value={"message": "initial seed"})
     db.commit()
     seed_accounting_defaults(db)
     seed_accounting_samples(db)
     seed_fixed_monthly_expenses(db)
+
+
+def ensure_court_letter_defaults(db: Session) -> None:
+    ensure_office_setting(db, key="court_reference_format", value="SSL/COURT/{year}/{seq:04d}", description="تنسيق الرقم المرجعي للخطابات القضائية")
+    ensure_office_setting(db, key="court_letter_footer", value="مع خالص الاحترام والتقدير.", description="تذييل الخطابات الرسمية")
+    ensure_office_setting(db, key="court_contact_details", value="مسقط، سلطنة عمان", description="بيانات التواصل في الخطابات")
+
+
+def seed_court_document_templates(db: Session, admin: User | None) -> None:
+    if db.scalar(select(CourtDocumentTemplate.id).limit(1)):
+        return
+    samples = [
+        ("طلب تأجيل جلسة", "خطابات المحكمة الابتدائية", "طلب تأجيل جلسة", "<p>فضيلة/سعادة رئيس الدائرة المحترم</p><p>الموضوع: {{letter_subject}}</p><p>بالإشارة إلى القضية رقم {{matter_number}} الخاصة بالعميل {{client_name}} ضد {{opponent_name}}، نلتمس النظر في طلب تأجيل الجلسة المحددة بتاريخ {{session_date}}.</p><p>سبب الطلب: {{letter_content}}</p>"),
+        ("طلب استخراج صورة من حكم", "خطابات المحكمة الابتدائية", "طلب استخراج صورة من حكم", "<p>إلى قسم أمانة السر المحترمين</p><p>نرجو التكرم بتزويدنا بصورة من الحكم أو القرار المتعلق بالقضية رقم {{matter_number}}، وذلك لصالح العميل {{client_name}}.</p>"),
+        ("طلب شهادة بمنطوق الحكم", "خطابات المحكمة الابتدائية", "طلب شهادة بمنطوق الحكم", "<p>نرجو إصدار شهادة بمنطوق الحكم في القضية رقم {{matter_number}} الخاصة بالعميل {{client_name}}، مع إضافة أي بيانات يراها القسم المختص لازمة.</p>"),
+        ("طلب الاطلاع على ملف قضية", "خطابات عامة", "طلب الاطلاع على ملف قضية", "<p>نرجو السماح بالاطلاع على ملف القضية رقم {{matter_number}} لدى {{court_name}}، واستكمال البيانات أو الملاحظات التالية: {{letter_content}}</p>"),
+        ("طلب ضم مستندات إلى ملف القضية", "خطابات عامة", "طلب ضم مستندات", "<p>نتقدم لعدالتكم بمستندات متعلقة بالقضية رقم {{matter_number}} ونلتمس ضمها إلى ملف الدعوى، وهي: {{letter_content}}</p>"),
+        ("خطاب إيداع مذكرة", "خطابات عامة", "إيداع مذكرة", "<p>نتقدم لعدالتكم بمذكرة في القضية رقم {{matter_number}} الخاصة بالعميل {{client_name}}، ونرجو إيداعها في ملف القضية.</p>"),
+        ("خطاب إيداع مستندات", "خطابات عامة", "إيداع مستندات", "<p>نتقدم بالمستندات الموضحة أدناه ونرجو إيداعها في ملف القضية رقم {{matter_number}}: {{letter_content}}</p>"),
+        ("طلب ضم ملف أو قضية", "خطابات المحكمة الابتدائية", "طلب ضم ملف أو قضية", "<p>نلتمس ضم الملف أو القضية المشار إليها في التفاصيل التالية إلى ملف القضية رقم {{matter_number}} متى رأت الجهة المختصة ذلك مناسبًا: {{letter_content}}</p>"),
+        ("خطاب استعلام عن قضية", "خطابات عامة", "استعلام عن قضية", "<p>نرجو إفادتنا بحالة القضية رقم {{matter_number}} لدى {{court_name}} وأي متطلبات لازمة لاستكمال المتابعة.</p>"),
+        ("طلب تحديد موعد جلسة", "خطابات عامة", "طلب تحديد موعد جلسة", "<p>نرجو التكرم بتحديد موعد جلسة أو إفادتنا بالموعد المحدد للقضية رقم {{matter_number}}.</p>"),
+        ("طلب تنفيذ حكم", "خطابات دوائر التنفيذ", "طلب تنفيذ حكم", "<p>نرجو اتخاذ ما يلزم بشأن طلب التنفيذ المتعلق بالعميل {{client_name}} وفق البيانات التالية: {{letter_content}}</p>"),
+        ("طلب مخاطبة جهة رسمية", "خطابات الجهات الحكومية", "طلب مخاطبة جهة رسمية", "<p>نرجو مخاطبة الجهة المختصة بشأن الموضوع التالي المرتبط بالقضية رقم {{matter_number}}: {{letter_content}}</p>"),
+        ("خطاب عام موجه إلى المحكمة", "خطابات عامة", "{{letter_subject}}", "<p>فضيلة/سعادة المسؤول المختص المحترم</p><p>{{letter_content}}</p>"),
+    ]
+    for name, category, subject, body in samples:
+        variables = sorted(set(part.strip("{}") for part in __import__("re").findall(r"{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}", subject + body)))
+        db.add(
+            CourtDocumentTemplate(
+                name=name,
+                category=category,
+                subject_template=subject,
+                body_html=body,
+                variables_schema=dumps({"variables": variables}),
+                allowed_roles=dumps({"roles": ["admin", "lawyer", "secretary"]}),
+                include_letterhead=True,
+                include_signature=True,
+                include_stamp=False,
+                requires_approval=False,
+                is_active=True,
+                created_by_id=admin.id if admin else None,
+            )
+        )
 
 
 def seed_accounting_samples(db: Session) -> None:

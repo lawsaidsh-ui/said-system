@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
-from app.routes import accounting, agencies, appointments, audit, auth, clients, consultations, dashboard, documents, forms, invoices, matters, owner_financial, payments, public, reports, sessions, settings, tasks, users, whatsapp
+from app.routes import accounting, agencies, appointments, audit, auth, clients, consultations, court_documents, dashboard, documents, forms, invoices, matters, owner_financial, payments, public, reports, sessions, settings, tasks, users, whatsapp
 from app.services.labels import (
     CASE_STATUSES,
     CLIENT_TYPES,
@@ -64,6 +64,7 @@ for router in [
     payments.router,
     appointments.router,
     consultations.router,
+    court_documents.router,
     users.router,
     reports.router,
     settings.router,

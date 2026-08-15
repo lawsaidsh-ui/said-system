@@ -2,7 +2,7 @@
 {% block title %}الإعدادات{% endblock %}
 {% block content %}
 <h2 class="page-title">الإعدادات</h2>
-<form class="panel form-grid" method="post">
+<form class="panel form-grid" method="post" enctype="multipart/form-data">
   {% for key, title in keys %}
     {% set item = settings_map.get(key) %}
     <div class="field {% if key in ['address','invoice_footer','notifications'] %}full{% endif %}">
@@ -11,6 +11,24 @@
         <textarea name="{{ key }}">{{ item.value if item else '' }}</textarea>
       {% else %}
         <input class="input" name="{{ key }}" value="{{ item.value if item else '' }}">
+      {% endif %}
+    </div>
+  {% endfor %}
+  <div class="full">
+    <h3 class="section-title">إعدادات الخطابات الرسمية</h3>
+    <p class="muted mb-3">تستخدم هذه القيم عند معاينة وإصدار الخطابات القضائية PDF.</p>
+  </div>
+  <div class="field"><label>رفع صورة اللتر هيد</label><input class="input" type="file" name="court_letterhead_file" accept="image/png,image/jpeg">{% if settings_map.get('court_letterhead_path') %}<p class="field-hint">تم رفع ملف حالي.</p>{% endif %}</div>
+  <div class="field"><label>رفع شعار المكتب</label><input class="input" type="file" name="court_logo_file" accept="image/png,image/jpeg">{% if settings_map.get('court_logo_path') %}<p class="field-hint">تم رفع ملف حالي.</p>{% endif %}</div>
+  <div class="field"><label>رفع ختم المكتب</label><input class="input" type="file" name="court_stamp_file" accept="image/png,image/jpeg">{% if settings_map.get('court_stamp_path') %}<p class="field-hint">تم رفع ملف حالي.</p>{% endif %}</div>
+  {% for key, title, kind in court_letter_keys %}
+    {% set item = settings_map.get(key) %}
+    <div class="field {% if kind == 'textarea' %}full{% endif %}">
+      <label>{{ title }}</label>
+      {% if kind == 'textarea' %}
+        <textarea name="{{ key }}">{{ item.value if item else '' }}</textarea>
+      {% else %}
+        <input class="input" name="{{ key }}" value="{{ item.value if item else 'SSL/COURT/{year}/{seq:04d}' if key == 'court_reference_format' else '' }}">
       {% endif %}
     </div>
   {% endfor %}

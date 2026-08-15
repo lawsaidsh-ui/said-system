@@ -770,3 +770,24 @@ document.addEventListener("DOMContentLoaded", () => {
     options: { responsive: true, maintainAspectRatio: false, indexAxis: "y" }
   });
 });
+document.addEventListener("submit", (event) => {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement)) return;
+  const editor = form.querySelector(".court-editor");
+  const output = form.querySelector("[data-editor-output]");
+  if (editor && output) output.value = editor.innerHTML;
+});
+
+document.addEventListener("click", (event) => {
+  const commandButton = event.target.closest("[data-editor-command]");
+  if (commandButton) {
+    event.preventDefault();
+    document.execCommand(commandButton.dataset.editorCommand, false, null);
+    return;
+  }
+  const variableButton = event.target.closest("[data-insert-variable]");
+  if (variableButton) {
+    event.preventDefault();
+    document.execCommand("insertText", false, variableButton.dataset.insertVariable);
+  }
+});

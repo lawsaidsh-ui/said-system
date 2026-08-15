@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ 'تعديل نموذج' if item else 'نموذج قضائي جديد' }}{% endblock %}
+{% block content %}
+{% set roles = (item.allowed_roles|from_json).roles if item and item.allowed_roles else ['lawyer','secretary'] %}
+<div class="court-docs-page">
+  <h2 class="page-title">{{ 'تعديل نموذج' if item else 'نموذج قضائي جديد' }}</h2>
+  <form class="panel form-grid court-template-form" method="post">
+    <div class="field"><label>اسم النموذج</label><input class="input" name="name" required value="{{ item.name if item else '' }}"></div>
+    <div class="field"><label>التصنيف</label><select name="category">{% for category in categories %}<option value="{{ category }}" {% if item and item.category==category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></div>
+    <div class="field"><label>الجهة الموجه إليها</label><input class="input" name="target_entity" value="{{ item.target_entity if item else '' }}"></div>
+    <div class="field"><label>موضوع الخطاب</label><input class="input" name="subject_template" required value="{{ item.subject_template if item else '' }}"></div>
+    <div class="field full"><label>وصف مختصر</label><textarea name="description">{{ item.description if item else '' }}</textarea></div>
+    <div class="field full">
+      <label>محتوى النموذج</label>
+      <div class="editor-toolbar actions">
+        <button class="btn btn-secondary" type="button" data-editor-command="bold">عريض</button>
+        <button class="btn btn-secondary" type="button" data-editor-command="insertUnorderedList">قائمة</button>
+        <button class="btn btn-secondary" type="button" data-editor-command="justifyRight">يمين</button>
+        <button class="btn btn-secondary" type="button" data-editor-command="justifyCenter">وسط</button>
+      </div>
+      <div class="court-editor" contenteditable="true" dir="rtl">{{ item.body_html|safe if item else '<p>فضيلة/سعادة رئيس الجهة المختصة المحترم</p><p>الموضوع: {{letter_subject}}</p><p>نرجو التكرم بالنظر في الطلب المتعلق بالقضية رقم {{matter_number}} الخاصة بالعميل {{client_name}}.</p>'|safe }}</div>
+      <textarea class="hidden" name="body_html" data-editor-output></textarea>
+    </div>
+    <section class="panel full mb-0">
+      <h3 class="section-title">المتغيرات الجاهزة</h3>
+      <div class="variable-pills">
+        {% for key,label_text in variables %}
+          <button class="btn btn-secondary" type="button" data-insert-variable="{{ '{{' ~ key ~ '}}' }}">{{ label_text }}</button>
+        {% endfor %}
+      </div>
+    </section>
+    <div class="field"><label>الأدوار المسموحة</label><select name="allowed_roles" multiple>{% for role_key, role_name in role_labels.items() %}<option value="{{ role_key }}" {% if role_key in roles %}selected{% endif %}>{{ role_name }}</option>{% endfor %}</select></div>
+    <div class="field option-grid">
+      <label><input type="checkbox" name="include_letterhead" value="1" {% if not item or item.include_letterhead %}checked{% endif %}> إضافة اللتر هيد</label>
+      <label><input type="checkbox" name="include_signature" value="1" {% if not item or item.include_signature %}checked{% endif %}> إضافة توقيع المستخدم</label>
+      <label><input type="checkbox" name="include_stamp" value="1" {% if item and item.include_stamp %}checked{% endif %}> إضافة ختم المكتب</label>
+      <label><input type="checkbox" name="requires_approval" value="1" {% if item and item.requires_approval %}checked{% endif %}> يتطلب موافقة</label>
+      <label><input type="checkbox" name="is_active" value="1" {% if not item or item.is_active %}checked{% endif %}> فعال</label>
+    </div>
+    <div class="actions full"><button class="btn btn-primary" type="submit">حفظ</button><a class="btn btn-secondary" href="/court-templates">إلغاء</a></div>
+  </form>
+</div>
+{% endblock %}

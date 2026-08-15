@@ -29,6 +29,15 @@ ACTION_LABELS = {
     "create_user": "إضافة مستخدم",
     "change_user_role": "تعديل صلاحيات مستخدم",
     "reset_user_password": "إعادة تعيين كلمة مرور مستخدم",
+    "create_court_template": "إنشاء نموذج خطاب قضائي",
+    "update_court_template": "تعديل نموذج خطاب قضائي",
+    "disable_court_template": "إيقاف نموذج خطاب قضائي",
+    "create_court_document_draft": "إنشاء مسودة خطاب قضائي",
+    "submit_court_document_approval": "إرسال خطاب للاعتماد",
+    "issue_court_document_pdf": "إصدار PDF لخطاب قضائي",
+    "revoke_court_document": "إلغاء خطاب قضائي",
+    "change_user_signature": "تغيير توقيع مستخدم",
+    "update_court_letter_settings": "تغيير إعدادات الخطابات الرسمية",
 }
 
 ENTITY_LABELS = {
@@ -48,6 +57,9 @@ ENTITY_LABELS = {
     "salary_record": "راتب",
     "installment": "قسط",
     "journal_entry": "قيد محاسبي",
+    "court_document_template": "نموذج خطاب قضائي",
+    "generated_court_document": "خطاب قضائي",
+    "office_setting": "إعدادات المكتب",
 }
 
 
