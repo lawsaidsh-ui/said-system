@@ -5,10 +5,29 @@
   <h2 class="page-title">إنشاء خطاب: {{ item.name }}</h2>
   <div class="steps-strip">اختيار النموذج ← اختيار العميل والقضية ← تعبئة البيانات ← المعاينة ← الاعتماد والإصدار</div>
   <form class="panel form-grid court-template-form" method="post">
-    <div class="field"><label>العميل</label><select name="client_id"><option value="">اختر العميل</option>{% for client in clients %}<option value="{{ client.id }}">{{ client.full_name }}</option>{% endfor %}</select></div>
-    <div class="field"><label>القضية</label><select name="matter_id"><option value="">اختر القضية</option>{% for matter in matters %}<option value="{{ matter.id }}">{{ matter.case_number }} - {{ matter.title }}</option>{% endfor %}</select></div>
-    <div class="field"><label>المحكمة أو الجهة</label><input class="input" name="court_name" value="{{ item.target_entity or '' }}"></div>
-    <div class="field"><label>الدائرة أو القسم</label><input class="input" name="department_name"></div>
+    <div class="field"><label>العميل</label><select name="client_id" data-client-filter-source="court-document-form"><option value="">اختر العميل</option>{% for client in clients %}<option value="{{ client.id }}">{{ client.full_name }}</option>{% endfor %}</select></div>
+    <div class="field"><label>القضية</label><select name="matter_id" data-client-filter-target="court-document-form" data-empty-without-client><option value="">اختر القضية</option>{% for matter in matters %}<option value="{{ matter.id }}" data-client-id="{{ matter.client_id }}">{{ matter.case_number }} - {{ matter.title }}</option>{% endfor %}</select></div>
+    <div class="field">
+      <label>المحكمة أو الجهة</label>
+      <select name="court_name">
+        <option value="">اختر المحكمة أو الجهة</option>
+        {% if item.target_entity and item.target_entity not in court_names %}
+          <option value="{{ item.target_entity }}" selected>{{ item.target_entity }}</option>
+        {% endif %}
+        {% for court_name in court_names %}
+          <option value="{{ court_name }}" {% if item.target_entity == court_name %}selected{% endif %}>{{ court_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>الدائرة أو القسم</label>
+      <select name="department_name">
+        <option value="">اختر الدائرة أو القسم</option>
+        {% for court_level in court_levels %}
+          <option value="{{ court_level }}">{{ court_level }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="field full"><label>موضوع الخطاب</label><input class="input" name="subject" value="{{ item.subject_template }}"></div>
     <div class="field full">
       <label>محتوى الخطاب قبل الإصدار</label>

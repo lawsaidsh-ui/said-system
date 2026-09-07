@@ -20,14 +20,34 @@
     {% endif %}
 
     <div class="form-grid client-existing-fields" data-client-existing>
-      <div class="field full">
+      <div class="field full {% if not matter %}autocomplete-field{% endif %}">
         <label>العميل الموجود</label>
-        <select name="client_id" {% if matter %}required{% endif %}>
-          <option value="">-- اختر العميل --</option>
-          {% for client in clients %}
-            <option value="{{ client.id }}" {% if matter and matter.client_id==client.id %}selected{% endif %}>{{ client.full_name }}{% if client.phone %} - {{ client.phone }}{% endif %}</option>
-          {% endfor %}
-        </select>
+        {% if matter %}
+          <select name="client_id" required>
+            <option value="">-- اختر العميل --</option>
+            {% for client in clients %}
+              <option value="{{ client.id }}" {% if matter.client_id==client.id %}selected{% endif %}>{{ client.full_name }}{% if client.phone %} - {{ client.phone }}{% endif %}</option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input class="input" type="search" autocomplete="off" data-client-search placeholder="اكتب اسم العميل أو رقم الجوال أو الرقم المدني">
+          <div class="autocomplete-results hidden" data-client-search-results></div>
+          <select class="hidden" name="client_id" data-client-search-select>
+            <option value="">-- اختر العميل --</option>
+            {% for client in clients %}
+              <option
+                value="{{ client.id }}"
+                data-client-id="{{ client.id }}"
+                data-client-name="{{ client.full_name }}"
+                data-client-phone="{{ client.phone or '' }}"
+                data-client-civil-id="{{ client.civil_id or '' }}"
+                data-client-company="{{ client.company_name or '' }}"
+              >
+                {{ client.full_name }}{% if client.phone %} - {{ client.phone }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        {% endif %}
       </div>
     </div>
 

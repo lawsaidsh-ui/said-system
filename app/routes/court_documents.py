@@ -202,6 +202,8 @@ async def court_document_create(template_id: int, request: Request, db: Session 
     form = await request.form()
     client = db.get(Client, int_or_none(str(form.get("client_id") or ""))) if form.get("client_id") else None
     matter = db.get(Matter, int_or_none(str(form.get("matter_id") or ""))) if form.get("matter_id") else None
+    if client and matter and matter.client_id != client.id:
+        raise HTTPException(status_code=400, detail="القضية المختارة لا تتبع العميل المختار.")
     if matter and not client:
         client = matter.client
     subject = str(form.get("subject") or template.subject_template)
